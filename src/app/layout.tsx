@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { Cairo, Cormorant_Garamond, Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { getSettings } from "@/lib/server-settings";
 import { themeCss } from "@/lib/theme-css";
+import { LOCALE_BOOTSTRAP_SCRIPT } from "@/lib/i18n/provider";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -16,6 +17,18 @@ const outfit = Outfit({
   variable: "--font-body-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+  display: "swap",
+});
+
+/**
+ * Neither Cormorant nor Outfit carries Arabic glyphs, so without this the
+ * Arabic UI falls back to whatever the device happens to have. Cairo covers
+ * the script and sits comfortably next to the Latin faces.
+ */
+const cairo = Cairo({
+  variable: "--font-arabic",
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -71,9 +84,12 @@ export default async function RootLayout({
 
   return (
     <html
+      // Overwritten before first paint by the bootstrap script below, and kept
+      // in sync afterwards by I18nProvider.
       lang="fr"
+      dir="ltr"
       suppressHydrationWarning
-      className={`${cormorant.variable} ${outfit.variable}`}
+      className={`${cormorant.variable} ${outfit.variable} ${cairo.variable}`}
     >
       <head>
         {/* Painted before first frame, so the owner's palette never flashes. */}
@@ -81,6 +97,8 @@ export default async function RootLayout({
           id="contessa-theme-ssr"
           dangerouslySetInnerHTML={{ __html: themeCss(settings.theme) }}
         />
+        {/* Sets lang/dir before paint so Arabic never flashes left-to-right. */}
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-dvh bg-bg text-ink antialiased">
         <Providers defaultMode={settings.theme.defaultMode}>{children}</Providers>

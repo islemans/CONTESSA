@@ -5,9 +5,9 @@ import { useMutation, useQuery } from "convex/react";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Moon, RotateCcw, Sun } from "lucide-react";
+import { Check, Moon, RotateCcw, Sparkles, Sun } from "lucide-react";
 import { api } from "@cvx/_generated/api";
-import { DEFAULT_SETTINGS } from "@cvx/lib/defaults";
+import { DEFAULT_SETTINGS, THEME_PRESETS } from "@cvx/lib/defaults";
 import { useAdminSession } from "@/lib/admin-session";
 import { cleanConvexError } from "@/lib/errors";
 import { TOKEN_LABELS, type ThemeConfig, type ThemeTokens } from "@/lib/theme-css";
@@ -108,6 +108,75 @@ export default function ThemePage() {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
+          <Card>
+            <h2 className="flex items-center gap-2 text-[0.6rem] tracking-luxe text-gold">
+              <Sparkles className="size-3.5" strokeWidth={1.5} />
+              Thèmes prêts à l&apos;emploi
+            </h2>
+            <p className="mt-2 text-xs text-muted">
+              Un clic remplace toutes les couleurs, en clair et en sombre. Vous
+              pouvez ensuite retoucher n&apos;importe quelle teinte ci-dessous.
+            </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {THEME_PRESETS.map((preset) => {
+                // Compares against both modes — matching only the previewed one
+                // would mark a half-applied preset as active.
+                const active =
+                  JSON.stringify(draft.light) === JSON.stringify(preset.light) &&
+                  JSON.stringify(draft.dark) === JSON.stringify(preset.dark);
+
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() =>
+                      setDraft({ ...draft, light: preset.light, dark: preset.dark })
+                    }
+                    className={cn(
+                      "rounded-[var(--c-radius)] border p-4 text-left transition-colors",
+                      active
+                        ? "border-accent bg-accent/5"
+                        : "border-line hover:border-gold",
+                    )}
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="flex gap-1.5">
+                        {(
+                          [
+                            preset[editing].bg,
+                            preset[editing].surface,
+                            preset[editing].accent,
+                            preset[editing].gold,
+                            preset[editing].ink,
+                          ] as string[]
+                        ).map((colour, i) => (
+                          <span
+                            key={i}
+                            className="size-5 rounded-full ring-1 ring-inset ring-black/10"
+                            style={{ backgroundColor: colour }}
+                          />
+                        ))}
+                      </span>
+                      {active && (
+                        <Check
+                          className="size-4 shrink-0 text-accent"
+                          strokeWidth={2}
+                        />
+                      )}
+                    </span>
+                    <span className="mt-3 block text-sm text-ink">
+                      {preset.label}
+                    </span>
+                    <span className="mt-0.5 block text-[0.65rem] text-muted">
+                      {preset.note}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
           <Card>
             <h2 className="text-[0.6rem] tracking-luxe text-gold">
               Mode par défaut

@@ -9,8 +9,11 @@ import { api } from "@cvx/_generated/api";
 import { Logo } from "./logo";
 import { ADMIN_PATH } from "@/lib/admin-path";
 import { FacebookIcon, InstagramIcon, TiktokIcon } from "./social-icons";
+import { useI18n } from "@/lib/i18n/provider";
+import { localizedName } from "@/lib/i18n/localize";
 
 export function Footer() {
+  const { t, locale } = useI18n();
   const settings = useQuery(api.settings.get, {});
   const categories = useQuery(api.categories.list, {});
 
@@ -29,8 +32,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Logo variant="full" className="w-40 sm:w-48" />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted">
-              Maquillage et vêtements choisis pour celles qui aiment le détail.
-              Livraison vers toutes les wilayas, paiement à la livraison.
+              {t("footer.about")}
             </p>
 
             {socials.length > 0 && (
@@ -52,14 +54,14 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-[0.65rem] tracking-luxe text-gold">Boutique</h3>
+            <h3 className="text-[0.65rem] tracking-luxe text-gold">{t("footer.shop")}</h3>
             <ul className="mt-5 space-y-3">
               <li>
                 <Link
                   href="/shop"
                   className="text-sm text-muted transition-colors hover:text-accent"
                 >
-                  Tout voir
+                  {t("footer.seeAll")}
                 </Link>
               </li>
               {categories?.slice(0, 6).map((category) => (
@@ -68,7 +70,7 @@ export function Footer() {
                     href={`/shop?c=${category.slug}`}
                     className="text-sm text-muted transition-colors hover:text-accent"
                   >
-                    {category.name}
+                    {localizedName(category, locale)}
                   </Link>
                 </li>
               ))}
@@ -76,7 +78,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-[0.65rem] tracking-luxe text-gold">Contact</h3>
+            <h3 className="text-[0.65rem] tracking-luxe text-gold">
+              {t("footer.contact")}
+            </h3>
             <ul className="mt-5 space-y-3 text-sm text-muted">
               {settings?.phone && (
                 <li>
@@ -100,8 +104,8 @@ export function Footer() {
                   </a>
                 </li>
               )}
-              <li>Livraison à domicile ou au bureau</li>
-              <li>Paiement à la livraison</li>
+              <li>{t("footer.deliveryLine")}</li>
+              <li>{t("footer.codLine")}</li>
             </ul>
           </div>
         </div>

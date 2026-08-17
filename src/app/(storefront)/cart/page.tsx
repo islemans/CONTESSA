@@ -5,9 +5,11 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { useCart, lineKey } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n/provider";
 import { formatDA } from "@/lib/utils";
 
 export default function CartPage() {
+  const { t } = useI18n();
   const { lines, subtotal, count, setQuantity, remove, ready } = useCart();
 
   if (!ready) {
@@ -28,16 +30,14 @@ export default function CartPage() {
       <div className="mx-auto max-w-lg px-5 py-28 text-center">
         <ShoppingBag className="mx-auto size-7 text-gold" strokeWidth={1.25} />
         <h1 className="mt-6 font-display text-3xl text-ink">
-          Votre panier est vide
+          {t("cart.emptyTitle")}
         </h1>
-        <p className="mt-3 text-sm text-muted">
-          Parcourez la boutique et ajoutez vos pièces préférées.
-        </p>
+        <p className="mt-3 text-sm text-muted">{t("cart.emptyBody")}</p>
         <Link
           href="/shop"
           className="btn-gold mt-9 inline-block rounded-full px-9 py-3.5 text-[0.68rem] tracking-luxe-sm"
         >
-          Découvrir la boutique
+          {t("hero.cta")}
         </Link>
       </div>
     );
@@ -46,9 +46,11 @@ export default function CartPage() {
   return (
     <div className="mx-auto max-w-4xl px-5 pt-10 sm:px-6">
       <header>
-        <p className="text-[0.6rem] tracking-luxe text-gold">Votre sélection</p>
+        <p className="text-[0.6rem] tracking-luxe text-gold">
+          {t("cart.eyebrow")}
+        </p>
         <h1 className="mt-2.5 font-display text-4xl text-ink sm:text-5xl">
-          Panier
+          {t("cart.title")}
         </h1>
         <div className="mt-4 h-px w-14 bg-gold" />
       </header>
@@ -98,8 +100,8 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => remove(key)}
-                        aria-label={`Retirer ${line.name}`}
-                        className="-mr-1 -mt-1 grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors hover:text-accent"
+                        aria-label={t("cart.remove", { name: line.name })}
+                        className="-me-1 -mt-1 grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors hover:text-accent"
                       >
                         <X className="size-4" strokeWidth={1.5} />
                       </button>
@@ -117,7 +119,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => setQuantity(key, line.quantity - 1)}
-                        aria-label="Diminuer"
+                        aria-label={t("cart.decrease")}
                         className="grid size-9 place-items-center text-ink"
                       >
                         <Minus className="size-3.5" strokeWidth={1.5} />
@@ -128,7 +130,7 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => setQuantity(key, line.quantity + 1)}
-                        aria-label="Augmenter"
+                        aria-label={t("cart.increase")}
                         className="grid size-9 place-items-center text-ink"
                       >
                         <Plus className="size-3.5" strokeWidth={1.5} />
@@ -149,27 +151,24 @@ export default function CartPage() {
       <div className="surface-card mt-8 p-5 sm:p-6">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted">
-            Sous-total ({count} article{count === 1 ? "" : "s"})
+            {t("cart.subtotalLine", { n: count })}
           </span>
           <span className="font-medium text-ink">{formatDA(subtotal)}</span>
         </div>
-        <p className="mt-2 text-xs text-muted">
-          Les frais de livraison sont calculés à l&apos;étape suivante, selon
-          votre wilaya.
-        </p>
+        <p className="mt-2 text-xs text-muted">{t("cart.deliveryLater")}</p>
 
         <Link
           href="/checkout"
           className="btn-gold mt-6 block rounded-full py-4 text-center text-[0.68rem] tracking-luxe-sm"
         >
-          Passer la commande
+          {t("cart.checkout")}
         </Link>
 
         <Link
           href="/shop"
           className="mt-4 block text-center text-[0.62rem] tracking-luxe-sm text-muted transition-colors hover:text-accent"
         >
-          Continuer mes achats
+          {t("cart.continue")}
         </Link>
       </div>
     </div>

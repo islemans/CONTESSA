@@ -12,15 +12,11 @@ import {
   ProductCardSkeleton,
   type ProductCardData,
 } from "@/components/storefront/product-card";
+import { useI18n } from "@/lib/i18n/provider";
+import { localizedName } from "@/lib/i18n/localize";
 import { cn } from "@/lib/utils";
 
 type Sort = "new" | "price-asc" | "price-desc";
-
-const SORTS: { value: Sort; label: string }[] = [
-  { value: "new", label: "Nouveautés" },
-  { value: "price-asc", label: "Prix croissant" },
-  { value: "price-desc", label: "Prix décroissant" },
-];
 
 export default function ShopPage() {
   // useSearchParams needs a Suspense parent, or the whole route opts out of
@@ -33,6 +29,7 @@ export default function ShopPage() {
 }
 
 function Shop() {
+  const { t, locale } = useI18n();
   const params = useSearchParams();
   const activeCategory = params.get("c") ?? undefined;
 
@@ -51,8 +48,16 @@ function Shop() {
     return copy;
   }, [products, sort]);
 
-  const heading =
-    categories?.find((c) => c.slug === activeCategory)?.name ?? "La boutique";
+  const activeCategoryDoc = categories?.find((c) => c.slug === activeCategory);
+  const heading = activeCategoryDoc
+    ? localizedName(activeCategoryDoc, locale)
+    : t("shop.title");
+
+  const sorts: { value: Sort; label: string }[] = [
+    { value: "new", label: t("shop.sortNew") },
+    { value: "price-asc", label: t("shop.sortPriceAsc") },
+    { value: "price-desc", label: t("shop.sortPriceDesc") },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-5 pt-10 sm:px-6 lg:px-8">
@@ -61,7 +66,9 @@ function Shop() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="text-[0.6rem] tracking-luxe text-gold">Contessa</p>
+        <p className="text-[0.6rem] tracking-luxe text-gold">
+          {t("shop.brand")}
+        </p>
         <h1 className="mt-2.5 font-display text-4xl text-ink sm:text-5xl">
           {heading}
         </h1>
@@ -71,7 +78,7 @@ function Shop() {
       {/* Horizontal rail: thumb-scrollable on mobile, no wrapping. */}
       <div className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0">
         <CategoryChip href="/shop" active={!activeCategory}>
-          Tout
+          {t("nav.all")}
         </CategoryChip>
         {categories?.map((category) => (
           <CategoryChip
@@ -79,25 +86,25 @@ function Shop() {
             href={`/shop?c=${category.slug}`}
             active={activeCategory === category.slug}
           >
-            {category.name}
+            {localizedName(category, locale)}
           </CategoryChip>
         ))}
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-4 border-y border-line py-3">
         <p className="text-xs text-muted">
-          {sorted ? `${sorted.length} article${sorted.length === 1 ? "" : "s"}` : "…"}
+          {sorted ? t("shop.count", { n: sorted.length }) : "…"}
         </p>
 
         <label className="flex items-center gap-2 text-xs text-muted">
           <SlidersHorizontal className="size-3.5" strokeWidth={1.5} />
-          <span className="sr-only">Trier par</span>
+          <span className="sr-only">{t("shop.sortBy")}</span>
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as Sort)}
             className="bg-transparent text-xs text-ink focus:outline-none"
           >
-            {SORTS.map((option) => (
+            {sorts.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -121,15 +128,15 @@ function Shop() {
 
       {sorted?.length === 0 && (
         <div className="rounded-[var(--c-radius)] border border-dashed border-line py-24 text-center">
-          <p className="font-display text-2xl text-ink">Rien ici pour l&apos;instant</p>
-          <p className="mt-2 text-sm text-muted">
-            Cette collection sera bientôt garnie.
+          <p className="font-display text-2xl text-ink">
+            {t("shop.emptyTitle")}
           </p>
+          <p className="mt-2 text-sm text-muted">{t("shop.emptyBody")}</p>
           <Link
             href="/shop"
             className="mt-6 inline-block text-[0.62rem] tracking-luxe-sm text-accent"
           >
-            Voir tous les articles
+            {t("shop.seeAllItems")}
           </Link>
         </div>
       )}

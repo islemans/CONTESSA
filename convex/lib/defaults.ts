@@ -164,3 +164,105 @@ export const DEFAULT_SETTINGS: SiteSettingsShape = {
     },
   },
 };
+
+export type ThemePreset = {
+  id: string;
+  /** Shown in the dashboard, in French like the rest of the admin. */
+  label: string;
+  note: string;
+  light: ThemeTokenSet;
+  dark: ThemeTokenSet;
+};
+
+/**
+ * One-tap palettes for the theme controller.
+ *
+ * Each carries a full light *and* dark set, because applying a preset must
+ * never leave the shop half-restyled for whichever mode the owner isn't
+ * currently previewing. `accentInk` is picked to stay readable on `accent` —
+ * that pairing is the one that breaks buttons if it drifts.
+ */
+export const THEME_PRESETS: ThemePreset[] = [
+  {
+    id: "contessa",
+    label: "Contessa",
+    note: "Rose gold — la palette d'origine",
+    light: DEFAULT_SETTINGS.theme.light,
+    dark: DEFAULT_SETTINGS.theme.dark,
+  },
+  {
+    id: "valentine",
+    label: "Saint-Valentin",
+    note: "Rouge passion — pour les fêtes",
+    light: {
+      bg: "#FFF7F7",
+      surface: "#FFFFFF",
+      ink: "#2C1518",
+      muted: "#8A6C70",
+      accent: "#C2334A",
+      accentInk: "#FFFFFF",
+      gold: "#D9788A",
+      border: "#F4DDE0",
+    },
+    dark: {
+      bg: "#0D0709",
+      surface: "#171012",
+      ink: "#FBE9EC",
+      muted: "#A98F95",
+      accent: "#E85A72",
+      accentInk: "#1A0A0E",
+      gold: "#F2A3B1",
+      border: "#2E1D22",
+    },
+  },
+  {
+    id: "ocean",
+    label: "Bleu Océan",
+    note: "Bleu profond — frais et net",
+    light: {
+      bg: "#F6F9FC",
+      surface: "#FFFFFF",
+      ink: "#16202B",
+      muted: "#6E8092",
+      accent: "#2A6FA8",
+      accentInk: "#FFFFFF",
+      gold: "#6FA8CF",
+      border: "#DCE7F0",
+    },
+    dark: {
+      bg: "#060A0F",
+      surface: "#101820",
+      ink: "#E6F0F8",
+      muted: "#8CA3B6",
+      accent: "#5AA9E0",
+      accentInk: "#06121C",
+      gold: "#9BCBEC",
+      border: "#1E2C38",
+    },
+  },
+  {
+    id: "emerald",
+    label: "Vert Émeraude",
+    note: "Vert botanique — doux et naturel",
+    light: {
+      bg: "#F5FAF7",
+      surface: "#FFFFFF",
+      ink: "#14241C",
+      muted: "#6C8578",
+      accent: "#1F7A55",
+      accentInk: "#FFFFFF",
+      gold: "#7BB597",
+      border: "#DAEBE1",
+    },
+    dark: {
+      bg: "#050B08",
+      surface: "#0F1813",
+      ink: "#E6F4EC",
+      muted: "#8CAA99",
+      accent: "#3FB681",
+      accentInk: "#04140D",
+      gold: "#8FD9B4",
+      border: "#1C2C24",
+    },
+  },
+];

@@ -7,9 +7,17 @@ import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
-import { Check, ChevronLeft, Minus, Plus, ShoppingBag } from "lucide-react";
+import {
+  Check,
+  ChevronLeft,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Zap,
+} from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import { useCart } from "@/lib/cart";
+import { useI18n } from "@/lib/i18n/provider";
 import { cn, discountPercent, formatDA } from "@/lib/utils";
 import {
   ProductCard,
@@ -17,11 +25,16 @@ import {
   type ProductCardData,
 } from "@/components/storefront/product-card";
 import { SectionHeading } from "@/components/storefront/section-heading";
+import {
+  QuickOrderSheet,
+  type QuickOrderItem,
+} from "@/components/storefront/quick-order";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
+  const { t } = useI18n();
   const product = useQuery(api.products.getBySlug, { slug });
   const related = useQuery(api.products.related, { slug });
   const { add } = useCart();
@@ -30,6 +43,7 @@ export default function ProductPage() {
   const [color, setColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [quickOpen, setQuickOpen] = useState(false);
 
   // Single-option variants don't deserve a choice — preselect them.
   useEffect(() => {
@@ -42,15 +56,13 @@ export default function ProductPage() {
   if (product === null) {
     return (
       <div className="mx-auto max-w-lg px-5 py-32 text-center">
-        <h1 className="font-display text-3xl text-ink">Article introuvable</h1>
-        <p className="mt-3 text-sm text-muted">
-          Cette pièce n&apos;est plus disponible ou a été retirée.
-        </p>
+        <h1 className="font-display text-3xl text-ink">{t("product.notFound")}</h1>
+        <p className="mt-3 text-sm text-muted">{t("product.notFoundBody")}</p>
         <Link
           href="/shop"
           className="btn-gold mt-8 inline-block rounded-full px-8 py-3 text-[0.65rem] tracking-luxe-sm"
         >
-          Retour à la boutique
+          {t("product.backToShop")}
         </Link>
       </div>
     );
@@ -63,15 +75,21 @@ export default function ProductPage() {
   const soldOut = product.trackStock && product.stock <= 0;
   const maxQuantity = product.trackStock ? Math.max(1, product.stock) : 99;
 
-  const handleAdd = () => {
+  /** Both buttons need the same variant checks before they can act. */
+  const variantsChosen = () => {
     if (product.sizes.length > 0 && !size) {
-      toast.error("Choisissez une taille.");
-      return;
+      toast.error(t("product.chooseSize"));
+      return false;
     }
     if (product.colors.length > 0 && !color) {
-      toast.error("Choisissez une couleur.");
-      return;
+      toast.error(t("product.chooseColour"));
+      return false;
     }
+    return true;
+  };
+
+  const handleAdd = () => {
+    if (!variantsChosen()) return;
 
     add(
       {
@@ -85,7 +103,22 @@ export default function ProductPage() {
       },
       quantity,
     );
-    toast.success("Ajouté à votre panier", { description: product.name });
+    toast.success(t("product.added"), { description: product.name });
+  };
+
+  const handleQuickOrder = () => {
+    if (!variantsChosen()) return;
+    setQuickOpen(true);
+  };
+
+  const quickItem: QuickOrderItem = {
+    productId: product._id,
+    name: product.name,
+    price: product.price,
+    image: product.coverUrl,
+    quantity,
+    size,
+    color,
   };
 
   return (
@@ -94,8 +127,8 @@ export default function ProductPage() {
         href="/shop"
         className="inline-flex items-center gap-1.5 text-[0.62rem] tracking-luxe-sm text-muted transition-colors hover:text-accent"
       >
-        <ChevronLeft className="size-3.5" />
-        Boutique
+        <ChevronLeft className="size-3.5 rtl:rotate-180" />
+        {t("product.back")}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-16">
@@ -129,7 +162,7 @@ export default function ProductPage() {
             </AnimatePresence>
 
             {discount && (
-              <span className="absolute left-4 top-4 rounded-full bg-accent px-3 py-1.5 text-[0.6rem] font-semibold tracking-luxe-sm text-accent-ink">
+              <span className="absolute start-4 top-4 rounded-full bg-accent px-3 py-1.5 text-[0.6rem] font-semibold tracking-luxe-sm text-accent-ink">
                 −{discount}%
               </span>
             )}
@@ -142,7 +175,7 @@ export default function ProductPage() {
                   key={url}
                   type="button"
                   onClick={() => setActiveImage(index)}
-                  aria-label={`Photo ${index + 1}`}
+                  aria-label={t("product.photo", { n: index + 1 })}
                   className={cn(
                     "relative aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-md border-2 transition-colors sm:w-20",
                     index === activeImage
@@ -191,7 +224,7 @@ export default function ProductPage() {
           <div className="mt-8 space-y-7">
             {product.sizes.length > 0 && (
               <Options
-                label="Taille"
+                label={t("product.size")}
                 selected={size}
                 options={product.sizes.map((s) => ({ value: s, label: s }))}
                 onSelect={setSize}
@@ -201,7 +234,8 @@ export default function ProductPage() {
             {product.colors.length > 0 && (
               <div>
                 <p className="text-[0.62rem] tracking-luxe-sm text-muted">
-                  Couleur{color ? ` · ${color}` : ""}
+                  {t("product.colour")}
+                  {color ? ` · ${color}` : ""}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2.5">
                   {product.colors.map((option) => (
@@ -233,12 +267,14 @@ export default function ProductPage() {
             )}
 
             <div>
-              <p className="text-[0.62rem] tracking-luxe-sm text-muted">Quantité</p>
+              <p className="text-[0.62rem] tracking-luxe-sm text-muted">
+                {t("product.quantity")}
+              </p>
               <div className="mt-3 inline-flex items-center rounded-full border border-line">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  aria-label="Diminuer la quantité"
+                  aria-label={t("cart.decrease")}
                   className="grid size-11 place-items-center text-ink transition-colors hover:text-accent"
                 >
                   <Minus className="size-4" strokeWidth={1.5} />
@@ -249,7 +285,7 @@ export default function ProductPage() {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
-                  aria-label="Augmenter la quantité"
+                  aria-label={t("cart.increase")}
                   className="grid size-11 place-items-center text-ink transition-colors hover:text-accent"
                 >
                   <Plus className="size-4" strokeWidth={1.5} />
@@ -258,37 +294,58 @@ export default function ProductPage() {
 
               {product.trackStock && product.stock > 0 && product.stock <= 5 && (
                 <p className="mt-2.5 text-xs text-accent">
-                  Plus que {product.stock} en stock
+                  {t("product.onlyLeft", { n: product.stock })}
                 </p>
               )}
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={soldOut}
-            className={cn(
-              "mt-9 flex w-full items-center justify-center gap-2.5 rounded-full py-4 text-[0.68rem] tracking-luxe-sm transition-opacity",
-              soldOut
-                ? "cursor-not-allowed border border-line text-muted"
-                : "btn-gold",
+          {/*
+            Order-now leads and add-to-bag is secondary. Most customers here buy
+            a single piece, and every extra screen between wanting it and
+            ordering it costs a sale.
+          */}
+          <div className="mt-9 space-y-3">
+            <button
+              type="button"
+              onClick={handleQuickOrder}
+              disabled={soldOut}
+              className={cn(
+                "flex w-full items-center justify-center gap-2.5 rounded-full py-4 text-[0.68rem] tracking-luxe-sm transition-transform",
+                soldOut
+                  ? "cursor-not-allowed border border-line text-muted"
+                  : "btn-gold shadow-lg shadow-accent/20 hover:scale-[1.01] active:scale-95",
+              )}
+            >
+              <Zap className="size-4" strokeWidth={1.5} />
+              {soldOut ? t("product.soldOut") : t("product.buyNow")}
+            </button>
+
+            {!soldOut && (
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="flex w-full items-center justify-center gap-2.5 rounded-full border border-line py-4 text-[0.68rem] tracking-luxe-sm text-ink transition-colors hover:border-gold hover:text-accent"
+              >
+                <ShoppingBag className="size-4" strokeWidth={1.5} />
+                {t("product.addToCart")}
+              </button>
             )}
-          >
-            <ShoppingBag className="size-4" strokeWidth={1.5} />
-            {soldOut ? "Épuisé" : "Ajouter au panier"}
-          </button>
+          </div>
 
           <div className="mt-8 space-y-2 border-t border-line pt-6 text-xs text-muted">
-            <p>Livraison à domicile ou au bureau, dans toutes les wilayas.</p>
-            <p>Paiement à la livraison — vous réglez à la réception.</p>
+            <p>{t("product.deliveryNote")}</p>
+            <p>{t("product.codNote")}</p>
           </div>
         </div>
       </div>
 
       {related && related.length > 0 && (
         <section className="pt-28">
-          <SectionHeading eyebrow="À découvrir" title="Dans le même esprit" />
+          <SectionHeading
+            eyebrow={t("product.related")}
+            title={t("product.relatedTitle")}
+          />
           <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
             {related.map((item, index) => (
               <ProductCard
@@ -300,6 +357,35 @@ export default function ProductPage() {
           </div>
         </section>
       )}
+
+      {/* Reachable by thumb on a phone, wherever they've scrolled to. */}
+      {!soldOut && (
+        <div className="sticky bottom-0 z-40 -mx-5 mt-16 border-t border-line bg-surface/95 px-5 py-3 backdrop-blur-xl lg:hidden">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[0.6rem] tracking-luxe-sm text-muted">
+                {product.name}
+              </p>
+              <p className="text-sm font-medium text-accent">
+                {formatDA(product.price * quantity)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleQuickOrder}
+              className="btn-gold shrink-0 rounded-full px-6 py-3 text-[0.62rem] tracking-luxe-sm"
+            >
+              {t("product.buyNow")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <QuickOrderSheet
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        item={quickItem}
+      />
     </div>
   );
 }

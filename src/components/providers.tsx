@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from "next-themes";
 import { Toaster } from "sonner";
 import { api } from "@cvx/_generated/api";
 import { CartProvider } from "@/lib/cart";
+import { I18nProvider } from "@/lib/i18n/provider";
 import { themeCss, type ThemeConfig } from "@/lib/theme-css";
 
 /**
@@ -61,6 +62,7 @@ export function Providers({
       enableSystem={false}
       disableTransitionOnChange
     >
+      <I18nProvider>
       <CartProvider>
         {convex ? <ThemeBridge /> : null}
         {children}
@@ -77,6 +79,7 @@ export function Providers({
           }}
         />
       </CartProvider>
+      </I18nProvider>
     </ThemeProvider>
   );
 

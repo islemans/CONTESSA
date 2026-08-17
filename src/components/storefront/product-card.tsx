@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useI18n } from "@/lib/i18n/provider";
 import { cn, discountPercent, formatDA } from "@/lib/utils";
 
 export type ProductCardData = {
@@ -28,6 +29,7 @@ export function ProductCard({
   index?: number;
   priority?: boolean;
 }) {
+  const { t } = useI18n();
   const discount = discountPercent(product.price, product.compareAtPrice);
   const soldOut = product.trackStock && product.stock <= 0;
   // Second photo cross-fades in on hover; skipped when there's only a cover.
@@ -80,7 +82,7 @@ export function ProductCard({
             </div>
           )}
 
-          <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-1.5">
+          <div className="pointer-events-none absolute start-3 top-3 flex flex-col gap-1.5">
             {discount && !soldOut && (
               <span className="rounded-full bg-accent px-2.5 py-1 text-[0.6rem] font-semibold tracking-luxe-sm text-accent-ink">
                 −{discount}%
@@ -88,7 +90,7 @@ export function ProductCard({
             )}
             {soldOut && (
               <span className="rounded-full bg-ink px-2.5 py-1 text-[0.6rem] font-semibold tracking-luxe-sm text-bg">
-                Épuisé
+                {t("product.soldOut")}
               </span>
             )}
           </div>

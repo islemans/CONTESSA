@@ -6,7 +6,13 @@ import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { ArrowRight, BadgeCheck, Sparkles, Truck } from "lucide-react";
 import { api } from "@cvx/_generated/api";
-import { Logo } from "@/components/storefront/logo";
+import { useI18n } from "@/lib/i18n/provider";
+import { localizedName } from "@/lib/i18n/localize";
+import { HeroLogo } from "@/components/storefront/hero-logo";
+import {
+  AuroraBackground,
+  FloatingMotes,
+} from "@/components/storefront/aurora-background";
 import {
   ProductCard,
   ProductCardSkeleton,
@@ -17,6 +23,7 @@ import { SectionHeading } from "@/components/storefront/section-heading";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function HomePage() {
+  const { t, locale } = useI18n();
   const categories = useQuery(api.categories.list, {});
   const featured = useQuery(api.products.list, { featuredOnly: true, limit: 8 });
   const latest = useQuery(api.products.list, { limit: 8 });
@@ -32,8 +39,8 @@ export default function HomePage() {
       {categories && categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-5 pt-20 sm:px-6 lg:px-8">
           <SectionHeading
-            eyebrow="Collections"
-            title="Explorer la maison"
+            eyebrow={t("home.collections")}
+            title={t("home.exploreHouse")}
           />
           <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
             {categories.map((category, index) => (
@@ -51,7 +58,7 @@ export default function HomePage() {
                   {category.imageUrl ? (
                     <Image
                       src={category.imageUrl}
-                      alt={category.name}
+                      alt={localizedName(category, locale)}
                       fill
                       sizes="(max-width: 1024px) 50vw, 25vw"
                       className="object-cover transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
@@ -68,11 +75,11 @@ export default function HomePage() {
 
                   <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                     <h3 className="font-display text-xl text-white sm:text-2xl">
-                      {category.name}
+                      {localizedName(category, locale)}
                     </h3>
                     <span className="mt-1 flex items-center gap-1.5 text-[0.6rem] tracking-luxe-sm text-white/80">
-                      Découvrir
-                      <ArrowRight className="size-3 transition-transform duration-500 group-hover:translate-x-1" />
+                      {t("home.discover")}
+                      <ArrowRight className="size-3 transition-transform duration-500 group-hover:translate-x-1 rtl:rotate-180" />
                     </span>
                   </div>
                 </Link>
@@ -84,9 +91,9 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-7xl px-5 pt-24 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Sélection"
-          title="Nos coups de cœur"
-          action={{ href: "/shop", label: "Tout voir" }}
+          eyebrow={t("home.selection")}
+          title={t("home.favourites")}
+          action={{ href: "/shop", label: t("home.seeAll") }}
         />
 
         <div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
@@ -108,11 +115,9 @@ export default function HomePage() {
           <div className="rounded-[var(--c-radius)] border border-dashed border-line py-20 text-center">
             <Sparkles className="mx-auto size-6 text-gold" strokeWidth={1.5} />
             <p className="mt-4 font-display text-xl text-ink">
-              La collection arrive bientôt
+              {t("home.comingSoon")}
             </p>
-            <p className="mt-2 text-sm text-muted">
-              Les premières pièces seront publiées très prochainement.
-            </p>
+            <p className="mt-2 text-sm text-muted">{t("home.comingSoonBody")}</p>
           </div>
         )}
       </section>
@@ -123,57 +128,44 @@ export default function HomePage() {
 }
 
 function Hero() {
+  const { t } = useI18n();
+
   return (
     <section className="relative overflow-hidden">
-      {/* Soft radial wash — keeps the fold from reading as a flat colour block. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-70"
-        style={{
-          background:
-            "radial-gradient(120% 80% at 50% 0%, var(--c-gold) 0%, transparent 55%)",
-          opacity: 0.16,
-        }}
-      />
+      {/* Drifting light and rising motes — both purely decorative. */}
+      <AuroraBackground />
+      <FloatingMotes />
 
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-5 pb-4 pt-16 text-center sm:pt-24">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1, ease: EASE }}
-          className="w-52 sm:w-72"
-        >
-          <Logo variant="full" priority />
-        </motion.div>
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-5 pb-4 pt-12 text-center sm:pt-20">
+        <HeroLogo className="w-56 sm:w-80" />
 
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE, delay: 0.25 }}
-          className="mt-2 max-w-md text-sm leading-relaxed text-muted sm:text-base"
+          transition={{ duration: 0.8, ease: EASE, delay: 0.35 }}
+          className="mt-3 max-w-md text-sm leading-relaxed text-muted sm:text-base"
         >
-          Maquillage et prêt-à-porter féminin, choisis pièce par pièce.
-          Livraison partout en Algérie, réglée à la réception.
+          {t("hero.subtitle")}
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: EASE, delay: 0.4 }}
-          className="mt-8 flex flex-col gap-3 sm:flex-row"
+          transition={{ duration: 0.8, ease: EASE, delay: 0.5 }}
+          className="mt-8"
         >
           <Link
             href="/shop"
-            className="btn-gold rounded-full px-9 py-3.5 text-[0.68rem] tracking-luxe-sm"
+            className="btn-gold inline-block rounded-full px-9 py-3.5 text-[0.68rem] tracking-luxe-sm shadow-lg shadow-accent/20 transition-transform hover:scale-[1.03] active:scale-95"
           >
-            Découvrir la boutique
+            {t("hero.cta")}
           </Link>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, scaleX: 0.3 }}
           animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 1.2, ease: EASE, delay: 0.55 }}
+          transition={{ duration: 1.2, ease: EASE, delay: 0.65 }}
           className="rule-fade mt-14 w-full max-w-xs"
         />
       </div>
@@ -182,26 +174,28 @@ function Hero() {
 }
 
 function Assurances() {
+  const { t } = useI18n();
+
   const items = [
     {
       Icon: Truck,
-      title: "Livraison 58 wilayas",
-      body: "À domicile ou au bureau de livraison, partout dans le pays.",
+      title: t("home.assurance1Title"),
+      body: t("home.assurance1Body"),
     },
     {
       Icon: BadgeCheck,
-      title: "Paiement à la livraison",
-      body: "Vous réglez votre commande une fois le colis entre vos mains.",
+      title: t("home.assurance2Title"),
+      body: t("home.assurance2Body"),
     },
     {
       Icon: Sparkles,
-      title: "Sélection soignée",
-      body: "Chaque pièce est choisie et vérifiée avant d'entrer en boutique.",
+      title: t("home.assurance3Title"),
+      body: t("home.assurance3Body"),
     },
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-5 pt-24 sm:px-6 lg:px-8">
+    <section className="relative mx-auto max-w-7xl px-5 pt-24 sm:px-6 lg:px-8">
       <div className="grid gap-4 sm:grid-cols-3 sm:gap-5">
         {items.map(({ Icon, title, body }, index) => (
           <motion.div
@@ -210,6 +204,7 @@ function Assurances() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 0.5, ease: EASE, delay: index * 0.08 }}
+            whileHover={{ y: -4 }}
             className="surface-card p-6 text-center sm:p-7"
           >
             <Icon className="mx-auto size-5 text-gold" strokeWidth={1.25} />

@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useI18n } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 /**
@@ -78,19 +81,22 @@ export function Logo({
 }
 
 export function LogoLockup({ className }: { className?: string }) {
+  const { t } = useI18n();
+
   return (
     <Link
       href="/"
-      aria-label="Contessa — accueil"
+      aria-label={t("nav.home")}
       className={cn("group flex items-center gap-2.5", className)}
     >
       <Logo variant="mark" className="w-9 shrink-0 sm:w-10" priority />
       <span className="flex flex-col leading-none">
+        {/* Always Latin: the wordmark is the brand, not translated copy. */}
         <span className="font-display text-[1.05rem] tracking-luxe text-ink transition-colors group-hover:text-accent sm:text-xl">
           Contessa
         </span>
         <span className="mt-1 hidden text-[0.5rem] tracking-luxe-sm text-muted sm:block">
-          Beauté &amp; Élégance
+          {t("hero.tagline")}
         </span>
       </span>
     </Link>

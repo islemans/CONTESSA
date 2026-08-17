@@ -43,6 +43,7 @@
 
   --font-display: var(--font-cormorant), Georgia, serif;
   --font-body: var(--font-body-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic-stack: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
 
   --radius-brand: var(--c-radius);
 
@@ -78,6 +79,32 @@
     letter-spacing: 0.01em;
   }
 
+  /*
+   * Arabic typography.
+   *
+   * Cormorant and Outfit have no Arabic glyphs, so the whole page switches to
+   * Cairo — headings included. The wide tracking that makes the Latin brand
+   * voice work would pull Arabic letters apart and break their joins, so it is
+   * dialled back to nothing here.
+   */
+  :root[lang="ar"] body,
+  :root[lang="ar"] h1,
+  :root[lang="ar"] h2,
+  :root[lang="ar"] h3,
+  :root[lang="ar"] h4,
+  :root[lang="ar"] input,
+  :root[lang="ar"] textarea,
+  :root[lang="ar"] select,
+  :root[lang="ar"] button {
+    font-family: var(--font-arabic-stack);
+  }
+
+  /* Arabic reads better slightly larger at the same nominal size. */
+  :root[lang="ar"] body {
+    font-size: 1.02em;
+    line-height: 1.75;
+  }
+
   /* Keyboard users get a visible ring; mouse users don't. */
   :focus-visible {
     outline: 2px solid var(--c-accent);
@@ -100,6 +127,24 @@
   .tracking-luxe-sm {
     letter-spacing: 0.18em;
     text-transform: uppercase;
+  }
+
+  /*
+   * Arabic has to opt out of the tracking.
+   *
+   * Wide letter-spacing is what gives the Latin brand voice its couture feel,
+   * but Arabic is a joined script — spacing it out severs the connections
+   * between letters and makes words hard to read. Uppercasing is a no-op for
+   * Arabic, so it goes too.
+   *
+   * This override must live in the same layer as the rules above, and after
+   * them: a later cascade layer beats an earlier one no matter how specific the
+   * earlier selector is, so putting this in `base` would silently lose.
+   */
+  :root[lang="ar"] .tracking-luxe,
+  :root[lang="ar"] .tracking-luxe-sm {
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   /* Hairline that fades at both ends — used under section headers. */
@@ -153,6 +198,165 @@
 @keyframes shimmer {
   to {
     background-position: -200% 0;
+  }
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * Motion
+ *
+ * Everything below animates only `transform` and `opacity`. Those two are the
+ * properties a phone can hand to the compositor and animate without repainting
+ * — the moment a keyframe touches blur, width, or background-position on a
+ * large surface, mid-range Androids start dropping frames.
+ *
+ * The aurora blobs are radial gradients, not blurred boxes, for the same
+ * reason: `filter: blur(80px)` across a full-bleed hero is exactly the kind of
+ * effect that looks free on a laptop and costs 20fps on a phone.
+ * ---------------------------------------------------------------------------
+ */
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform, opacity;
+  /* Promotes to its own layer so the drift never repaints siblings. */
+  transform: translateZ(0);
+  pointer-events: none;
+}
+
+@keyframes aurora-drift-a {
+  0% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8%, 6%, 0) scale(1.18);
+  }
+  100% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+}
+
+@keyframes aurora-drift-b {
+  0% {
+    transform: translate3d(5%, 6%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-8%, -5%, 0) scale(0.92);
+  }
+  100% {
+    transform: translate3d(5%, 6%, 0) scale(1.1);
+  }
+}
+
+@keyframes aurora-drift-c {
+  0% {
+    transform: translate3d(0, 4%, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(6%, -6%, 0) scale(1.15);
+  }
+  100% {
+    transform: translate3d(0, 4%, 0) scale(0.95);
+  }
+}
+
+/* Slow, barely-there rise and fall — the logo should breathe, not bob. */
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+/* A band of light travelling across the mark, like foil catching the light. */
+@keyframes logo-sheen {
+  0% {
+    transform: translate3d(-130%, 0, 0) skewX(-18deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  38% {
+    opacity: 0.85;
+  }
+  55%,
+  100% {
+    transform: translate3d(230%, 0, 0) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+/* Gold motes drifting upward past the hero. */
+@keyframes mote-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  75% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(var(--mote-drift, 12px), -190px, 0) scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* Expanding ring behind the logo. */
+@keyframes halo-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-logo-float {
+  animation: logo-float 7s var(--ease-silk) infinite;
+}
+
+.animate-logo-sheen {
+  animation: logo-sheen 6.5s var(--ease-silk) infinite;
+}
+
+.animate-mote {
+  animation: mote-rise var(--mote-duration, 9s) linear infinite;
+  animation-delay: var(--mote-delay, 0s);
+}
+
+.animate-halo {
+  animation: halo-pulse 5s var(--ease-silk) infinite;
+}
+
+/*
+ * Honour the OS setting. The blanket rule further down kills durations
+ * globally, but these decorative loops should stop existing rather than run
+ * 10,000 times per second, so they are switched off explicitly.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob,
+  .animate-logo-float,
+  .animate-logo-sheen,
+  .animate-mote,
+  .animate-halo {
+    animation: none !important;
+  }
+  .animate-mote,
+  .animate-logo-sheen {
+    display: none;
   }
 }
 

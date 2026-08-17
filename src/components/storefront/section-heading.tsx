@@ -37,7 +37,7 @@ export function SectionHeading({
           className="group hidden shrink-0 items-center gap-1.5 pb-1 text-[0.62rem] tracking-luxe-sm text-muted transition-colors hover:text-accent sm:flex"
         >
           {action.label}
-          <ArrowRight className="size-3 transition-transform duration-500 group-hover:translate-x-1" />
+          <ArrowRight className="size-3 transition-transform duration-500 group-hover:translate-x-1 rtl:rotate-180" />
         </Link>
       )}
     </motion.div>

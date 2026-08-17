@@ -4,6 +4,29 @@ Boutique de maquillage et de prêt-à-porter féminin — Next.js + Convex, livr
 
 ---
 
+## Languages
+
+The shop speaks **French, Arabic and English**, switched from the chip in the
+top bar (and from the mobile drawer). The choice is remembered per visitor; a
+first-time visitor gets whichever of the three their browser prefers, falling
+back to French.
+
+Arabic flips the whole layout to RTL and swaps to **Cairo**, since neither
+Cormorant nor Outfit carries Arabic glyphs. The wide brand letter-spacing is
+switched off for Arabic — it's a joined script, and spacing it out severs the
+letters.
+
+Copy lives in `src/lib/i18n/dictionaries.ts`. French is the source of truth and
+the other two are typed against it, so a missing translation is a build error
+rather than a blank label on the shop.
+
+**Product names and descriptions are shown exactly as you type them** — they
+aren't translated. Categories do have an optional Arabic name field, used when
+the shop is read in Arabic. If you want per-language product copy later, that's
+two optional fields on the `products` table plus two inputs in the editor.
+
+---
+
 ## Stack
 
 | Layer | Choice |
@@ -83,6 +106,53 @@ open session, so the next visit shows the first-run screen again.
 Theme changes are stored in the database and applied on the next render — no
 redeploy, no code change. The logo follows the mode automatically: rose-gold
 artwork on light, gold artwork on dark.
+
+### Ready-made themes
+
+The Thème page has four one-tap palettes: **Contessa** (rose gold, the
+original), **Saint-Valentin** (red), **Bleu Océan** and **Vert Émeraude**. Each
+carries a full light *and* dark set, so applying one never leaves the shop
+half-restyled. Tap a preset, then retouch any individual colour underneath.
+
+The animated hero background reads the same tokens, so it recolours with
+everything else.
+
+Locked out of the colours, or want the original palette back:
+
+```bash
+npx convex run seed:resetTheme
+```
+
+### Buying without the cart
+
+Every product page leads with **Order now**, which opens a sheet with the whole
+order form — name, phone, wilaya, home or desk, address — and places the order
+for that one item. The cart still works for multi-item orders; this just removes
+two screens for the common case of buying a single piece. On phones a sticky bar
+keeps that button in reach at any scroll position.
+
+Both paths call the same `orders.create`, and both share one implementation of
+the delivery rules (`src/lib/use-delivery-choice.ts`) so their prices can't
+drift apart.
+
+### Motion
+
+The hero has drifting aurora gradients, rising gold motes, and a logo that
+settles in, breathes, and catches a band of light every few seconds.
+
+All of it animates **only `transform` and `opacity`** — the two properties a
+phone hands to the compositor without repainting. The glow is built from radial
+gradients rather than `filter: blur()`, which looks free on a laptop and costs
+real frames on a mid-range Android. Everything switches off under
+`prefers-reduced-motion`.
+
+To see it populated before your own photos exist:
+
+```bash
+npx convex run seed:demoCatalogue
+```
+
+Clear it with `npx convex run seed:clearCatalogue`.
 
 ---
 

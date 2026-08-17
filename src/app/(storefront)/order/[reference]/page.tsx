@@ -6,9 +6,11 @@ import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { Check, Package, Phone } from "lucide-react";
 import { api } from "@cvx/_generated/api";
+import { useI18n } from "@/lib/i18n/provider";
 import { formatDA, formatPhone } from "@/lib/utils";
 
 export default function OrderConfirmationPage() {
+  const { t } = useI18n();
   const { reference } = useParams<{ reference: string }>();
   const order = useQuery(api.orders.getByReference, { reference });
 
@@ -25,15 +27,13 @@ export default function OrderConfirmationPage() {
   if (order === null) {
     return (
       <div className="mx-auto max-w-lg px-5 py-28 text-center">
-        <h1 className="font-display text-3xl text-ink">Commande introuvable</h1>
-        <p className="mt-3 text-sm text-muted">
-          Vérifiez le lien, ou contactez-nous avec votre numéro de commande.
-        </p>
+        <h1 className="font-display text-3xl text-ink">{t("order.notFound")}</h1>
+        <p className="mt-3 text-sm text-muted">{t("order.notFoundBody")}</p>
         <Link
           href="/shop"
           className="btn-gold mt-8 inline-block rounded-full px-9 py-3.5 text-[0.68rem] tracking-luxe-sm"
         >
-          Retour à la boutique
+          {t("product.backToShop")}
         </Link>
       </div>
     );
@@ -55,21 +55,22 @@ export default function OrderConfirmationPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
       >
-        <h1 className="mt-7 font-display text-4xl text-ink">Merci {order.customerName.split(" ")[0]}</h1>
+        <h1 className="mt-7 font-display text-4xl text-ink">
+          {t("order.thanks", { name: order.customerName.split(" ")[0] })}
+        </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Votre commande est enregistrée. Nous vous appelons très vite au{" "}
-          {formatPhone(order.phone)} pour la confirmer.
+          {t("order.recorded", { phone: formatPhone(order.phone) })}
         </p>
 
         <p className="mt-6 inline-block rounded-full border border-line px-5 py-2 text-[0.65rem] tracking-luxe-sm text-gold">
-          Commande {order.reference}
+          {t("order.reference", { ref: order.reference })}
         </p>
       </motion.div>
 
       <div className="surface-card mt-10 p-5 text-left sm:p-6">
         <h2 className="flex items-center gap-2 text-[0.62rem] tracking-luxe-sm text-gold">
           <Package className="size-3.5" strokeWidth={1.5} />
-          Récapitulatif
+          {t("order.summary")}
         </h2>
 
         <ul className="mt-5 space-y-3">
@@ -92,20 +93,26 @@ export default function OrderConfirmationPage() {
 
         <dl className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm">
           <div className="flex justify-between">
-            <dt className="text-muted">Sous-total</dt>
+            <dt className="text-muted">{t("checkout.subtotal")}</dt>
             <dd className="text-ink">{formatDA(order.subtotal)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted">
-              Livraison ·{" "}
-              {order.deliveryType === "home" ? "À domicile" : "Au bureau"}
+              {t("checkout.deliveryFee")} ·{" "}
+              {order.deliveryType === "home"
+                ? t("checkout.home")
+                : t("checkout.desk")}
             </dt>
             <dd className="text-ink">
-              {order.deliveryPrice === 0 ? "Offerte" : formatDA(order.deliveryPrice)}
+              {order.deliveryPrice === 0
+                ? t("checkout.free")
+                : formatDA(order.deliveryPrice)}
             </dd>
           </div>
           <div className="flex items-baseline justify-between border-t border-line pt-3">
-            <dt className="text-[0.62rem] tracking-luxe-sm text-ink">Total</dt>
+            <dt className="text-[0.62rem] tracking-luxe-sm text-ink">
+              {t("checkout.total")}
+            </dt>
             <dd className="font-display text-2xl text-accent">
               {formatDA(order.total)}
             </dd>
@@ -127,15 +134,14 @@ export default function OrderConfirmationPage() {
       </div>
 
       <p className="mt-6 text-xs text-muted">
-        Gardez le numéro <strong className="text-ink">{order.reference}</strong>{" "}
-        — il nous permet de retrouver votre commande.
+        {t("order.keepRef", { ref: order.reference })}
       </p>
 
       <Link
         href="/shop"
         className="mt-8 mb-4 inline-block text-[0.62rem] tracking-luxe-sm text-accent"
       >
-        Continuer mes achats
+        {t("order.continue")}
       </Link>
     </div>
   );
