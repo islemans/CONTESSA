@@ -12,6 +12,9 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  *
  * Both artwork files are rendered and CSS chooses — same reasoning as `Logo`.
  * Deciding in JS would need a mounted flag and would flash the wrong one.
+ *
+ * The artwork is transparent PNG, so the drifting aurora behind it shows
+ * through the drawing rather than being blocked by a rectangle.
  */
 export function HeroLogo({ className }: { className?: string }) {
   return (
@@ -40,26 +43,33 @@ export function HeroLogo({ className }: { className?: string }) {
         <div className="animate-logo-float relative">
           <span className="relative block overflow-hidden">
             <Image
-              src="/brand/logo-light.jpg"
+              src="/brand/logo-light.png"
               alt="Contessa"
-              width={1400}
-              height={1130}
+              width={1000}
+              height={989}
               priority
-              className="h-auto w-full object-contain mix-blend-multiply dark:hidden"
+              className="h-auto w-full object-contain dark:hidden"
             />
             <Image
-              src="/brand/logo-dark.jpg"
+              src="/brand/logo-dark.png"
               alt="Contessa"
-              width={1400}
-              height={1130}
+              width={1000}
+              height={989}
               priority
-              className="hidden h-auto w-full object-contain mix-blend-screen dark:block"
+              className="hidden h-auto w-full object-contain dark:block"
             />
 
-            {/* The travelling highlight. */}
+            {/*
+              The travelling highlight.
+
+              `screen` rather than `overlay`: the artwork is transparent now, so
+              overlay would blend against the page behind it and smear a band
+              across empty space. Screen only ever brightens, so the sweep reads
+              as light catching the lines and leaves the gaps alone.
+            */}
             <span
               aria-hidden
-              className="animate-logo-sheen absolute inset-y-0 w-1/3 mix-blend-overlay"
+              className="animate-logo-sheen absolute inset-y-0 w-1/3 mix-blend-screen"
               style={{
                 background:
                   "linear-gradient(100deg, transparent, var(--c-gold), transparent)",

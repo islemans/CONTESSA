@@ -4,6 +4,37 @@ Boutique de maquillage et de prêt-à-porter féminin — Next.js + Convex, livr
 
 ---
 
+## Logos
+
+`public/brand/` holds four transparent PNGs generated from your two JPEGs:
+
+| File | Used for |
+|---|---|
+| `logo-light.png` / `logo-dark.png` | Full lockup — hero, footer, dashboard, login |
+| `emblem-light.png` / `emblem-dark.png` | Crowned figure alone — the top bar |
+
+Both files in a pair share one crop box, so the logo doesn't jump when a visitor
+switches theme. The top bar uses `object-contain` on a height-driven box, which
+is why the whole drawing fits with space around it instead of being cropped.
+
+**If you replace either source JPEG**, regenerate with:
+
+```bash
+python scripts/cutout-logos.py
+```
+
+It measures the background colour, recovers per-pixel alpha, and divides the
+background back out — so antialiased edges and the thin gold hairlines survive,
+which a plain colour-key would chew up. It also writes composited previews to
+`preview-logos/` so you can check the result on several theme backgrounds before
+shipping. Needs `pip install pillow numpy`.
+
+The original JPEGs stay in `public/brand/` — they're the source for
+regeneration, and the flat-background version is what gets used as the social
+sharing image, since several platforms render PNG transparency as black.
+
+---
+
 ## Languages
 
 The shop speaks **French, Arabic and English**, switched from the chip in the

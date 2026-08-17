@@ -57,7 +57,12 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description:
       "Maison de beauté et de mode féminine. Maquillage et vêtements sélectionnés avec soin, livrés partout en Algérie.",
-    icons: { icon: "/brand/logo-light.jpg", apple: "/brand/logo-light.jpg" },
+    // Transparent emblem for the tab icon; the original flat-background JPEG
+    // for sharing, since several platforms render PNG alpha as black.
+    icons: {
+      icon: "/brand/emblem-light.png",
+      apple: "/brand/emblem-light.png",
+    },
     openGraph: {
       title: `${settings.siteName} — ${settings.tagline}`,
       type: "website",
