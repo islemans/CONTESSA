@@ -20,7 +20,7 @@ import {
   fieldClass,
 } from "@/components/admin/ui";
 import { ImageUploader, type UploadedImage } from "@/components/admin/image-uploader";
-import { formatDA } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/provider";
 
 /** Common sizes, one tap each — typing them out every time gets old fast. */
 const SIZE_PRESETS = [
@@ -31,6 +31,7 @@ const SIZE_PRESETS = [
 export default function ProductEditorPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { t, money } = useI18n();
   const { token } = useAdminSession();
   const isNew = id === "new";
 
@@ -106,11 +107,11 @@ export default function ProductEditorPage() {
   const addColor = () => {
     const clean = colorName.trim();
     if (!clean) {
-      toast.error("Donnez un nom à la couleur.");
+      toast.error(t("a.product.colourNeedsName"));
       return;
     }
     if (colors.some((c) => c.name.toLowerCase() === clean.toLowerCase())) {
-      toast.error("Cette couleur existe déjà.");
+      toast.error(t("a.product.colourExists"));
       return;
     }
     setColors([...colors, { name: clean, hex: colorHex }]);
@@ -122,13 +123,13 @@ export default function ProductEditorPage() {
     if (!token || saving) return;
 
     if (!categoryId) {
-      toast.error("Choisissez une catégorie — créez-en une d'abord si besoin.");
+      toast.error(t("a.product.needCategory"));
       return;
     }
 
     const priceValue = Number(price);
     if (!Number.isFinite(priceValue) || priceValue <= 0) {
-      toast.error("Entrez un prix valide.");
+      toast.error(t("a.product.invalidPrice"));
       return;
     }
 
@@ -152,10 +153,10 @@ export default function ProductEditorPage() {
 
       if (isNew) {
         await createProduct({ token, ...payload });
-        toast.success("Produit créé");
+        toast.success(t("a.product.created"));
       } else {
         await updateProduct({ token, id: id as Id<"products">, ...payload });
-        toast.success("Produit enregistré");
+        toast.success(t("a.product.saved"));
       }
       router.push(base);
     } catch (error) {
@@ -172,23 +173,22 @@ export default function ProductEditorPage() {
         href={base}
         className="inline-flex items-center gap-1.5 text-[0.6rem] tracking-luxe-sm text-muted transition-colors hover:text-accent"
       >
-        <ChevronLeft className="size-3.5" />
-        Produits
+        <ChevronLeft className="size-3.5 rtl:rotate-180" />
+        {t("a.nav.products")}
       </Link>
 
       <PageHeader
-        eyebrow="Catalogue"
-        title={isNew ? "Nouveau produit" : "Modifier le produit"}
+        eyebrow={t("a.nav.atelier")}
+        title={isNew ? t("a.product.newTitle") : t("a.product.editTitle")}
       />
 
       {noCategories && (
         <Card className="mb-6 border-gold/50">
           <p className="text-sm text-ink">
-            Vous n&apos;avez pas encore de catégorie. Créez-en une avant
-            d&apos;ajouter un produit.
+            {t("a.product.noCategoryWarning")}
           </p>
           <Link href={`${ADMIN_PATH}/dashboard/categories`}>
-            <Button className="mt-4">Créer une catégorie</Button>
+            <Button className="mt-4">{t("a.product.createCategory")}</Button>
           </Link>
         </Card>
       )}
@@ -196,26 +196,28 @@ export default function ProductEditorPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
           <Card>
-            <h2 className="text-[0.6rem] tracking-luxe text-gold">Essentiel</h2>
+            <h2 className="text-[0.6rem] tracking-luxe text-gold">
+              {t("a.product.essential")}
+            </h2>
             <div className="mt-5 space-y-5">
-              <Field label="Nom du produit" required>
+              <Field label={t("a.product.name")} required>
                 <input
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Rouge à lèvres velours"
+                  placeholder={t("a.product.namePlaceholder")}
                   className={fieldClass}
                 />
               </Field>
 
-              <Field label="Catégorie" required>
+              <Field label={t("a.product.category")} required>
                 <select
                   required
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className={fieldClass}
                 >
-                  <option value="">Choisir…</option>
+                  <option value="">{t("a.product.choose")}</option>
                   {categories?.map((category) => (
                     <option key={category._id} value={category._id}>
                       {category.name}
@@ -224,18 +226,18 @@ export default function ProductEditorPage() {
                 </select>
               </Field>
 
-              <Field label="Description">
+              <Field label={t("a.product.description")}>
                 <textarea
                   rows={5}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Texture crémeuse, fini mat longue tenue…"
+                  placeholder={t("a.product.descriptionPlaceholder")}
                   className={`${fieldClass} resize-none`}
                 />
               </Field>
 
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Prix (DA)" required>
+                <Field label={t("a.product.price")} required>
                   <input
                     required
                     type="number"
@@ -249,8 +251,8 @@ export default function ProductEditorPage() {
                 </Field>
 
                 <Field
-                  label="Prix barré (DA)"
-                  hint="Affiche une remise sur la fiche"
+                  label={t("a.product.comparePrice")}
+                  hint={t("a.product.comparePriceHint")}
                 >
                   <input
                     type="number"
@@ -266,31 +268,34 @@ export default function ProductEditorPage() {
 
               {price && compareAtPrice && Number(compareAtPrice) > Number(price) && (
                 <p className="text-xs text-accent">
-                  Remise affichée :{" "}
-                  {Math.round(
-                    ((Number(compareAtPrice) - Number(price)) /
-                      Number(compareAtPrice)) *
-                      100,
-                  )}
-                  % — la cliente voit {formatDA(Number(price))} au lieu de{" "}
-                  {formatDA(Number(compareAtPrice))}.
+                  {t("a.product.discountPreview", {
+                    percent: Math.round(
+                      ((Number(compareAtPrice) - Number(price)) /
+                        Number(compareAtPrice)) *
+                        100,
+                    ),
+                    now: money(Number(price)),
+                    was: money(Number(compareAtPrice)),
+                  })}
                 </p>
               )}
             </div>
           </Card>
 
           <Card>
-            <h2 className="text-[0.6rem] tracking-luxe text-gold">Photos</h2>
+            <h2 className="text-[0.6rem] tracking-luxe text-gold">
+              {t("a.product.photos")}
+            </h2>
             <div className="mt-5 space-y-6">
               <ImageUploader
-                label="Photo principale"
-                hint="C'est elle qui s'affiche dans la grille. Format portrait (3:4) recommandé — les photos verticales rendent le mieux."
+                label={t("a.product.cover")}
+                hint={t("a.product.coverHint")}
                 value={cover}
                 onChange={setCover}
               />
               <ImageUploader
-                label="Galerie"
-                hint="Jusqu'à 12 photos. La première sert d'aperçu au survol dans la grille."
+                label={t("a.product.gallery")}
+                hint={t("a.product.galleryHint")}
                 multiple
                 value={gallery}
                 onChange={setGallery}
@@ -300,12 +305,12 @@ export default function ProductEditorPage() {
 
           <Card>
             <h2 className="text-[0.6rem] tracking-luxe text-gold">
-              Tailles &amp; couleurs
+              {t("a.product.sizesColours")}
             </h2>
 
             <div className="mt-5">
               <p className="mb-2 text-[0.6rem] tracking-luxe-sm text-muted">
-                Tailles
+                {t("a.product.sizes")}
               </p>
 
               {sizes.length > 0 && (
@@ -319,7 +324,7 @@ export default function ProductEditorPage() {
                       <button
                         type="button"
                         onClick={() => setSizes(sizes.filter((s) => s !== size))}
-                        aria-label={`Retirer ${size}`}
+                        aria-label={t("a.product.remove", { name: size })}
                         className="grid size-4 place-items-center rounded-full text-muted hover:text-accent"
                       >
                         <X className="size-3" strokeWidth={2} />
@@ -340,7 +345,7 @@ export default function ProductEditorPage() {
                       addSize(sizeInput);
                     }
                   }}
-                  placeholder="M, 38, Unique…"
+                  placeholder={t("a.product.sizePlaceholder")}
                   className={fieldClass}
                 />
                 <Button
@@ -373,7 +378,7 @@ export default function ProductEditorPage() {
 
             <div className="mt-8 border-t border-line pt-6">
               <p className="mb-2 text-[0.6rem] tracking-luxe-sm text-muted">
-                Couleurs
+                {t("a.product.colours")}
               </p>
 
               {colors.length > 0 && (
@@ -393,7 +398,7 @@ export default function ProductEditorPage() {
                         onClick={() =>
                           setColors(colors.filter((c) => c.name !== color.name))
                         }
-                        aria-label={`Retirer ${color.name}`}
+                        aria-label={t("a.product.remove", { name: color.name })}
                         className="grid size-4 place-items-center rounded-full text-muted hover:text-accent"
                       >
                         <X className="size-3" strokeWidth={2} />
@@ -408,7 +413,7 @@ export default function ProductEditorPage() {
                   type="color"
                   value={colorHex}
                   onChange={(e) => setColorHex(e.target.value)}
-                  aria-label="Teinte"
+                  aria-label={t("a.product.tint")}
                   className="h-11 w-14 shrink-0 cursor-pointer rounded-[var(--c-radius)] border border-line bg-bg p-1"
                 />
                 <input
@@ -420,7 +425,7 @@ export default function ProductEditorPage() {
                       addColor();
                     }
                   }}
-                  placeholder="Rouge Contessa"
+                  placeholder={t("a.product.colourPlaceholder")}
                   className={fieldClass}
                 />
                 <Button type="button" variant="ghost" onClick={addColor}>
@@ -433,34 +438,38 @@ export default function ProductEditorPage() {
 
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
           <Card>
-            <h2 className="text-[0.6rem] tracking-luxe text-gold">Publication</h2>
+            <h2 className="text-[0.6rem] tracking-luxe text-gold">
+              {t("a.product.publication")}
+            </h2>
             <div className="mt-5 space-y-5">
               <Toggle
                 checked={isActive}
                 onChange={setIsActive}
-                label="Visible en boutique"
-                hint="Désactivé, le produit disparaît du site."
+                label={t("a.product.visible")}
+                hint={t("a.product.visibleHint")}
               />
               <Toggle
                 checked={isFeatured}
                 onChange={setIsFeatured}
-                label="En vedette"
-                hint="Apparaît dans « Nos coups de cœur » sur l'accueil."
+                label={t("a.product.featured")}
+                hint={t("a.product.featuredHint")}
               />
             </div>
           </Card>
 
           <Card>
-            <h2 className="text-[0.6rem] tracking-luxe text-gold">Stock</h2>
+            <h2 className="text-[0.6rem] tracking-luxe text-gold">
+              {t("a.product.stock")}
+            </h2>
             <div className="mt-5 space-y-5">
               <Toggle
                 checked={trackStock}
                 onChange={setTrackStock}
-                label="Suivre le stock"
-                hint="Le stock baisse à chaque commande et le produit passe « épuisé » à zéro."
+                label={t("a.product.trackStock")}
+                hint={t("a.product.trackStockHint")}
               />
               {trackStock && (
-                <Field label="Quantité disponible">
+                <Field label={t("a.product.quantity")}>
                   <input
                     type="number"
                     min="0"
@@ -481,11 +490,11 @@ export default function ProductEditorPage() {
               disabled={noCategories}
               className="flex-1"
             >
-              {isNew ? "Créer le produit" : "Enregistrer"}
+              {isNew ? t("a.product.createButton") : t("a.save")}
             </Button>
             <Link href={base}>
               <Button type="button" variant="ghost">
-                Annuler
+                {t("a.cancel")}
               </Button>
             </Link>
           </div>

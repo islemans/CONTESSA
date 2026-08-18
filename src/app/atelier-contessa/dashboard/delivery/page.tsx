@@ -16,7 +16,8 @@ import {
   TableSkeleton,
   fieldClass,
 } from "@/components/admin/ui";
-import { cn, formatDA } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/provider";
 
 type Row = {
   id: Id<"wilayas">;
@@ -31,6 +32,7 @@ type Row = {
 };
 
 export default function DeliveryPage() {
+  const { t, money } = useI18n();
   const { token } = useAdminSession();
   const wilayas = useQuery(api.wilayas.listAll, token ? { token } : "skip");
   const bulkUpdate = useMutation(api.wilayas.bulkUpdate);
@@ -107,7 +109,7 @@ export default function DeliveryPage() {
           isActive,
         })),
       });
-      toast.success("Tarifs de livraison enregistrés");
+      toast.success(t("a.delivery.saved"));
     } catch (error) {
       toast.error(cleanConvexError(error));
     } finally {
@@ -119,7 +121,7 @@ export default function DeliveryPage() {
     const home = bulkHome === "" ? null : Number(bulkHome);
     const desk = bulkDesk === "" ? null : Number(bulkDesk);
     if (home === null && desk === null) {
-      toast.error("Entrez au moins un tarif.");
+      toast.error(t("a.delivery.needPrice"));
       return;
     }
     setRows((current) =>
@@ -131,7 +133,7 @@ export default function DeliveryPage() {
     );
     setBulkHome("");
     setBulkDesk("");
-    toast.success("Appliqué à toutes les wilayas — pensez à enregistrer.");
+    toast.success(t("a.delivery.applied"));
   };
 
   const handleRestore = async () => {
@@ -140,8 +142,8 @@ export default function DeliveryPage() {
       const added = await restoreOfficial({ token });
       toast.success(
         added === 0
-          ? "Les 58 wilayas sont déjà présentes."
-          : `${added} wilaya(s) ajoutée(s).`,
+          ? t("a.delivery.alreadyComplete")
+          : t("a.delivery.restored", { n: added }),
       );
     } catch (error) {
       toast.error(cleanConvexError(error));
@@ -158,20 +160,22 @@ export default function DeliveryPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Logistique"
-        title="Livraison"
-        description="Un tarif à domicile et un tarif au bureau pour chaque wilaya. Ce sont ces montants que la cliente voit au moment de commander."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.delivery")}
+        description={t("a.delivery.description")}
         action={
           <Button variant="ghost" onClick={handleRestore}>
             <RotateCcw className="size-3.5" strokeWidth={1.5} />
-            Restaurer les 58 wilayas
+            {t("a.delivery.restore")}
           </Button>
         }
       />
 
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <Card>
-          <p className="text-[0.55rem] tracking-luxe-sm text-muted">Wilayas actives</p>
+          <p className="text-[0.55rem] tracking-luxe-sm text-muted">
+            {t("a.delivery.activeWilayas")}
+          </p>
           <p className="mt-3 font-display text-2xl text-ink">
             {rows.filter((r) => r.isActive).length}
             <span className="text-base text-muted"> / {rows.length}</span>
@@ -179,16 +183,18 @@ export default function DeliveryPage() {
         </Card>
         <Card>
           <p className="text-[0.55rem] tracking-luxe-sm text-muted">
-            Moyenne domicile
+            {t("a.delivery.avgHome")}
           </p>
           <p className="mt-3 font-display text-2xl text-ink">
-            {formatDA(averageHome)}
+            {money(averageHome)}
           </p>
         </Card>
         <Card>
-          <p className="text-[0.55rem] tracking-luxe-sm text-muted">Moyenne bureau</p>
+          <p className="text-[0.55rem] tracking-luxe-sm text-muted">
+            {t("a.delivery.avgDesk")}
+          </p>
           <p className="mt-3 font-display text-2xl text-ink">
-            {formatDA(averageDesk)}
+            {money(averageDesk)}
           </p>
         </Card>
       </div>
@@ -196,12 +202,9 @@ export default function DeliveryPage() {
       <Card className="mb-6">
         <h2 className="flex items-center gap-2 text-[0.6rem] tracking-luxe text-gold">
           <Wand2 className="size-3.5" strokeWidth={1.5} />
-          Tarif unique
+          {t("a.delivery.flatRate")}
         </h2>
-        <p className="mt-2 text-xs text-muted">
-          Appliquez le même prix à toutes les wilayas, puis ajustez les
-          exceptions une par une.
-        </p>
+        <p className="mt-2 text-xs text-muted">{t("a.delivery.flatRateBody")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <input
             type="number"
@@ -209,7 +212,7 @@ export default function DeliveryPage() {
             inputMode="numeric"
             value={bulkHome}
             onChange={(e) => setBulkHome(e.target.value)}
-            placeholder="Domicile (DA)"
+            placeholder={t("a.delivery.homePlaceholder")}
             className={`${fieldClass} sm:w-44`}
           />
           <input
@@ -218,11 +221,11 @@ export default function DeliveryPage() {
             inputMode="numeric"
             value={bulkDesk}
             onChange={(e) => setBulkDesk(e.target.value)}
-            placeholder="Bureau (DA)"
+            placeholder={t("a.delivery.deskPlaceholder")}
             className={`${fieldClass} sm:w-44`}
           />
           <Button type="button" variant="ghost" onClick={applyBulk}>
-            Appliquer à toutes
+            {t("a.delivery.applyAll")}
           </Button>
         </div>
       </Card>
@@ -235,7 +238,7 @@ export default function DeliveryPage() {
         <input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
-          placeholder="Chercher une wilaya (nom ou code)…"
+          placeholder={t("a.delivery.search")}
           className={`${fieldClass} pl-11`}
         />
       </div>
@@ -244,16 +247,11 @@ export default function DeliveryPage() {
         <TableSkeleton rows={6} />
       ) : rows.length === 0 ? (
         <Card>
-          <p className="text-sm text-ink">
-            Aucune wilaya enregistrée. Lancez la commande de départ dans un
-            terminal :
-          </p>
+          <p className="text-sm text-ink">{t("a.delivery.noneRegistered")}</p>
           <code className="mt-3 block rounded-[var(--c-radius)] border border-line bg-bg px-4 py-3 text-xs text-accent">
             npx convex run seed:init
           </code>
-          <p className="mt-3 text-xs text-muted">
-            …ou cliquez sur « Restaurer les 58 wilayas » ci-dessus.
-          </p>
+          <p className="mt-3 text-xs text-muted">{t("a.delivery.orRestore")}</p>
         </Card>
       ) : (
         <div className="space-y-2 pb-28">
@@ -282,7 +280,7 @@ export default function DeliveryPage() {
 
                 <PriceInput
                   Icon={Home}
-                  label="Domicile"
+                  label={t("a.delivery.home")}
                   value={row.homePrice}
                   available={row.homeAvailable}
                   onValue={(homePrice) => patch(row.id, { homePrice })}
@@ -293,7 +291,7 @@ export default function DeliveryPage() {
 
                 <PriceInput
                   Icon={Building2}
-                  label="Bureau"
+                  label={t("a.delivery.desk")}
                   value={row.deskPrice}
                   available={row.deskAvailable}
                   onValue={(deskPrice) => patch(row.id, { deskPrice })}
@@ -312,7 +310,9 @@ export default function DeliveryPage() {
                       : "border-line text-muted",
                   )}
                 >
-                  {row.isActive ? "Desservie" : "Non desservie"}
+                  {row.isActive
+                    ? t("a.delivery.served")
+                    : t("a.delivery.notServed")}
                 </button>
               </div>
             </div>
@@ -320,7 +320,7 @@ export default function DeliveryPage() {
 
           {visible.length === 0 && (
             <p className="py-10 text-center text-sm text-muted">
-              Aucune wilaya ne correspond à « {term} ».
+              {t("a.delivery.noMatch", { term })}
             </p>
           )}
         </div>
@@ -336,9 +336,7 @@ export default function DeliveryPage() {
             className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface/95 px-4 py-4 backdrop-blur-xl"
           >
             <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-              <p className="text-xs text-muted">
-                Modifications non enregistrées
-              </p>
+              <p className="text-xs text-muted">{t("a.delivery.unsaved")}</p>
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
@@ -359,10 +357,10 @@ export default function DeliveryPage() {
                     );
                   }}
                 >
-                  Annuler
+                  {t("a.cancel")}
                 </Button>
                 <Button onClick={handleSave} loading={saving}>
-                  Enregistrer
+                  {t("a.save")}
                 </Button>
               </div>
             </div>
@@ -388,13 +386,23 @@ function PriceInput({
   onValue: (next: number) => void;
   onToggle: () => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="flex shrink-0 items-center gap-2">
       <button
         type="button"
         onClick={onToggle}
-        aria-label={`${label} : ${available ? "disponible" : "indisponible"}`}
-        title={available ? `${label} disponible` : `${label} indisponible`}
+        aria-label={
+          available
+            ? t("a.delivery.available", { mode: label })
+            : t("a.delivery.unavailable", { mode: label })
+        }
+        title={
+          available
+            ? t("a.delivery.available", { mode: label })
+            : t("a.delivery.unavailable", { mode: label })
+        }
         className={cn(
           "grid size-9 shrink-0 place-items-center rounded-full border transition-colors",
           available
@@ -412,7 +420,7 @@ function PriceInput({
           value={value}
           disabled={!available}
           onChange={(event) => onValue(Number(event.target.value))}
-          aria-label={`Tarif ${label}`}
+          aria-label={t("a.delivery.rateFor", { mode: label })}
           className="w-24 rounded-[var(--c-radius)] border border-line bg-bg py-2 pl-3 pr-8 text-sm text-ink transition-colors focus:border-gold focus:outline-none disabled:opacity-40"
         />
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[0.6rem] text-muted">

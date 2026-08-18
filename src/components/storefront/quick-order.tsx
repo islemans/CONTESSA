@@ -12,7 +12,7 @@ import type { Id } from "@cvx/_generated/dataModel";
 import { useI18n } from "@/lib/i18n/provider";
 import { useDeliveryChoice } from "@/lib/use-delivery-choice";
 import { cleanConvexError } from "@/lib/errors";
-import { cn, formatDA } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { CustomerFields, DeliveryFields } from "./order-fields";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -44,7 +44,7 @@ export function QuickOrderSheet({
   item: QuickOrderItem | null;
 }) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const placeOrder = useMutation(api.orders.create);
 
   const subtotal = item ? item.price * item.quantity : 0;
@@ -177,7 +177,7 @@ export function QuickOrderSheet({
                 </span>
               </span>
               <span className="shrink-0 text-sm font-medium text-ink">
-                {formatDA(subtotal)}
+                {money(subtotal)}
               </span>
             </div>
 
@@ -202,7 +202,7 @@ export function QuickOrderSheet({
             <dl className="mt-6 space-y-2 border-t border-line pt-5 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted">{t("checkout.subtotal")}</dt>
-                <dd className="text-ink">{formatDA(subtotal)}</dd>
+                <dd className="text-ink">{money(subtotal)}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted">{t("checkout.deliveryFee")}</dt>
@@ -211,7 +211,7 @@ export function QuickOrderSheet({
                     ? "—"
                     : choice.deliveryPrice === 0
                       ? t("checkout.free")
-                      : formatDA(choice.deliveryPrice)}
+                      : money(choice.deliveryPrice)}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between border-t border-line pt-3">
@@ -219,7 +219,7 @@ export function QuickOrderSheet({
                   {t("checkout.total")}
                 </dt>
                 <dd className="font-display text-2xl text-accent">
-                  {formatDA(choice.total)}
+                  {money(choice.total)}
                 </dd>
               </div>
             </dl>

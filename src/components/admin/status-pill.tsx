@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n/provider";
 import { cn } from "@/lib/utils";
 
 export type OrderStatus =
@@ -9,13 +10,28 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
-export const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: "En attente",
-  confirmed: "Confirmée",
-  shipped: "Expédiée",
-  delivered: "Livrée",
-  cancelled: "Annulée",
-};
+/** Stable order for the status workflow, independent of language. */
+export const ORDER_STATUSES: OrderStatus[] = [
+  "pending",
+  "confirmed",
+  "shipped",
+  "delivered",
+  "cancelled",
+];
+
+const STATUS_KEYS = {
+  pending: "a.orders.pending",
+  confirmed: "a.orders.confirmed",
+  shipped: "a.orders.shipped",
+  delivered: "a.orders.delivered",
+  cancelled: "a.orders.cancelled",
+} as const;
+
+/** Labels have to come from a hook now that they are translated. */
+export function useStatusLabel() {
+  const { t } = useI18n();
+  return (status: OrderStatus) => t(STATUS_KEYS[status]);
+}
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
   pending: "border-amber-500/40 text-amber-600 dark:text-amber-400",
@@ -26,6 +42,8 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
 };
 
 export function StatusPill({ status }: { status: OrderStatus }) {
+  const label = useStatusLabel();
+
   return (
     <span
       className={cn(
@@ -33,7 +51,7 @@ export function StatusPill({ status }: { status: OrderStatus }) {
         STATUS_STYLES[status],
       )}
     >
-      {STATUS_LABELS[status]}
+      {label(status)}
     </span>
   );
 }

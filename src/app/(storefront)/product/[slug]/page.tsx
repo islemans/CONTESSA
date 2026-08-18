@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Check,
@@ -18,13 +18,14 @@ import {
 import { api } from "@cvx/_generated/api";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n/provider";
-import { cn, discountPercent, formatDA } from "@/lib/utils";
+import { cn, discountPercent } from "@/lib/utils";
 import {
   ProductCard,
   ProductCardSkeleton,
   type ProductCardData,
 } from "@/components/storefront/product-card";
 import { SectionHeading } from "@/components/storefront/section-heading";
+import { ProductGallery } from "@/components/storefront/product-gallery";
 import {
   QuickOrderSheet,
   type QuickOrderItem,
@@ -34,7 +35,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const product = useQuery(api.products.getBySlug, { slug });
   const related = useQuery(api.products.related, { slug });
   const { add } = useCart();
@@ -42,7 +43,6 @@ export default function ProductPage() {
   const [size, setSize] = useState<string | undefined>();
   const [color, setColor] = useState<string | undefined>();
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
   const [quickOpen, setQuickOpen] = useState(false);
 
   // Single-option variants don't deserve a choice — preselect them.
@@ -132,63 +132,17 @@ export default function ProductPage() {
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-16">
-        <div>
-          {/* Portrait frame, matching the grid — never letterboxed. */}
-          <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--c-radius)] bg-surface">
-            <AnimatePresence mode="wait">
-              {images[activeImage] ? (
-                <motion.div
-                  key={activeImage}
-                  initial={{ opacity: 0, scale: 1.03 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.45, ease: EASE }}
-                  className="absolute inset-0"
-                >
-                  <Image
-                    src={images[activeImage]}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority
-                    className="object-cover"
-                  />
-                </motion.div>
-              ) : (
-                <div className="grid h-full place-items-center border border-line">
-                  <span className="font-display text-6xl text-gold/30">C</span>
-                </div>
-              )}
-            </AnimatePresence>
-
-            {discount && (
-              <span className="absolute start-4 top-4 rounded-full bg-accent px-3 py-1.5 text-[0.6rem] font-semibold tracking-luxe-sm text-accent-ink">
+        <ProductGallery
+          images={images}
+          alt={product.name}
+          badge={
+            discount ? (
+              <span className="rounded-full bg-accent px-3 py-1.5 text-[0.6rem] font-semibold tracking-luxe-sm text-accent-ink">
                 −{discount}%
               </span>
-            )}
-          </div>
-
-          {images.length > 1 && (
-            <div className="no-scrollbar mt-3 flex gap-2.5 overflow-x-auto pb-1">
-              {images.map((url, index) => (
-                <button
-                  key={url}
-                  type="button"
-                  onClick={() => setActiveImage(index)}
-                  aria-label={t("product.photo", { n: index + 1 })}
-                  className={cn(
-                    "relative aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-md border-2 transition-colors sm:w-20",
-                    index === activeImage
-                      ? "border-accent"
-                      : "border-transparent opacity-60 hover:opacity-100",
-                  )}
-                >
-                  <Image src={url} alt="" fill sizes="80px" className="object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            ) : null
+          }
+        />
 
         <div className="lg:pt-4">
           {product.categoryName && (
@@ -206,11 +160,11 @@ export default function ProductPage() {
 
           <div className="mt-5 flex items-baseline gap-3">
             <span className="font-display text-3xl text-accent">
-              {formatDA(product.price)}
+              {money(product.price)}
             </span>
             {product.compareAtPrice && product.compareAtPrice > product.price && (
               <span className="text-base text-muted line-through">
-                {formatDA(product.compareAtPrice)}
+                {money(product.compareAtPrice)}
               </span>
             )}
           </div>
@@ -367,7 +321,7 @@ export default function ProductPage() {
                 {product.name}
               </p>
               <p className="text-sm font-medium text-accent">
-                {formatDA(product.price * quantity)}
+                {money(product.price * quantity)}
               </p>
             </div>
             <button

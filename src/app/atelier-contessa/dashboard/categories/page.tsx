@@ -10,6 +10,7 @@ import { api } from "@cvx/_generated/api";
 import type { Id } from "@cvx/_generated/dataModel";
 import { useAdminSession } from "@/lib/admin-session";
 import { cleanConvexError } from "@/lib/errors";
+import { useI18n } from "@/lib/i18n/provider";
 import {
   Button,
   Card,
@@ -41,6 +42,7 @@ const BLANK: Draft = {
 };
 
 export default function CategoriesPage() {
+  const { t } = useI18n();
   const { token } = useAdminSession();
   const categories = useQuery(api.categories.listAll, token ? { token } : "skip");
   const createCategory = useMutation(api.categories.create);
@@ -67,7 +69,7 @@ export default function CategoriesPage() {
           image,
           isActive: draft.isActive,
         });
-        toast.success("Catégorie mise à jour");
+        toast.success(t("a.categories.updated"));
       } else {
         await createCategory({
           token,
@@ -77,7 +79,7 @@ export default function CategoriesPage() {
           image,
           isActive: draft.isActive,
         });
-        toast.success("Catégorie créée");
+        toast.success(t("a.categories.created"));
       }
       setDraft(null);
     } catch (error) {
@@ -89,11 +91,11 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: Id<"categories">, name: string) => {
     if (!token) return;
-    if (!confirm(`Supprimer la catégorie « ${name} » ?`)) return;
+    if (!confirm(t("a.categories.confirmDelete", { name }))) return;
 
     try {
       await removeCategory({ token, id });
-      toast.success("Catégorie supprimée");
+      toast.success(t("a.categories.deleted"));
     } catch (error) {
       // The server refuses while products still reference it.
       toast.error(cleanConvexError(error));
@@ -112,13 +114,13 @@ export default function CategoriesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Catalogue"
-        title="Catégories"
-        description="Les univers de votre boutique : maquillage, robes, sacs… Chaque produit appartient à une catégorie."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.categories")}
+        description={t("a.categories.description")}
         action={
           <Button onClick={() => setDraft(BLANK)}>
             <Plus className="size-3.5" strokeWidth={2} />
-            Nouvelle catégorie
+            {t("a.categories.new")}
           </Button>
         }
       />
@@ -127,12 +129,12 @@ export default function CategoriesPage() {
         <TableSkeleton rows={3} />
       ) : categories.length === 0 ? (
         <EmptyState
-          title="Aucune catégorie"
-          body="Créez votre première catégorie pour commencer à organiser vos produits."
+          title={t("a.categories.none")}
+          body={t("a.categories.noneBody")}
           action={
             <Button onClick={() => setDraft(BLANK)}>
               <Plus className="size-3.5" strokeWidth={2} />
-              Nouvelle catégorie
+              {t("a.categories.new")}
             </Button>
           }
         />
@@ -165,8 +167,9 @@ export default function CategoriesPage() {
                     <p className="truncate text-xs text-muted">{category.nameAr}</p>
                   )}
                   <p className="mt-1 text-[0.6rem] tracking-luxe-sm text-gold">
-                    {category.productCount} produit
-                    {category.productCount === 1 ? "" : "s"}
+                    {t("a.categories.productCount", {
+                      n: category.productCount,
+                    })}
                   </p>
                 </div>
 
@@ -174,8 +177,16 @@ export default function CategoriesPage() {
                   <button
                     type="button"
                     onClick={() => toggleActive(category._id, category.isActive)}
-                    aria-label={category.isActive ? "Masquer" : "Afficher"}
-                    title={category.isActive ? "Visible en boutique" : "Masquée"}
+                    aria-label={
+                      category.isActive
+                        ? t("a.products.hide")
+                        : t("a.products.publish")
+                    }
+                    title={
+                      category.isActive
+                        ? t("a.categories.visible")
+                        : t("a.categories.hidden")
+                    }
                     className="grid size-8 place-items-center rounded-full text-muted transition-colors hover:text-accent"
                   >
                     {category.isActive ? (
@@ -198,7 +209,7 @@ export default function CategoriesPage() {
                         isActive: category.isActive,
                       })
                     }
-                    aria-label="Modifier"
+                    aria-label={t("a.edit")}
                     className="grid size-8 place-items-center rounded-full text-muted transition-colors hover:text-accent"
                   >
                     <Pencil className="size-4" strokeWidth={1.5} />
@@ -206,7 +217,7 @@ export default function CategoriesPage() {
                   <button
                     type="button"
                     onClick={() => handleDelete(category._id, category.name)}
-                    aria-label="Supprimer"
+                    aria-label={t("a.delete")}
                     className="grid size-8 place-items-center rounded-full text-muted transition-colors hover:text-red-500"
                   >
                     <Trash2 className="size-4" strokeWidth={1.5} />
@@ -240,31 +251,33 @@ export default function CategoriesPage() {
               className="relative max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl border border-line bg-surface p-6 sm:max-w-lg sm:rounded-2xl"
             >
               <h2 className="font-display text-2xl text-ink">
-                {draft.id ? "Modifier la catégorie" : "Nouvelle catégorie"}
+                {draft.id
+                  ? t("a.categories.editTitle")
+                  : t("a.categories.new")}
               </h2>
 
               <div className="mt-6 space-y-5">
-                <Field label="Nom" required>
+                <Field label={t("a.categories.name")} required>
                   <input
                     required
                     value={draft.name}
                     onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    placeholder="Maquillage"
+                    placeholder={t("a.categories.namePlaceholder")}
                     className={fieldClass}
                   />
                 </Field>
 
-                <Field label="Nom en arabe" hint="Facultatif">
+                <Field label={t("a.categories.nameAr")} hint={t("a.optional")}>
                   <input
                     dir="rtl"
                     value={draft.nameAr}
                     onChange={(e) => setDraft({ ...draft, nameAr: e.target.value })}
-                    placeholder="مكياج"
+                    placeholder={t("a.categories.nameArPlaceholder")}
                     className={fieldClass}
                   />
                 </Field>
 
-                <Field label="Description" hint="Facultatif">
+                <Field label={t("a.product.description")} hint={t("a.optional")}>
                   <textarea
                     rows={3}
                     value={draft.description}
@@ -276,8 +289,8 @@ export default function CategoriesPage() {
                 </Field>
 
                 <ImageUploader
-                  label="Photo de couverture"
-                  hint="Format portrait recommandé (3:4)."
+                  label={t("a.categories.cover")}
+                  hint={t("a.categories.coverHint")}
                   value={draft.image}
                   onChange={(image) => setDraft({ ...draft, image })}
                 />
@@ -286,22 +299,22 @@ export default function CategoriesPage() {
                   <Toggle
                     checked={draft.isActive}
                     onChange={(isActive) => setDraft({ ...draft, isActive })}
-                    label="Visible en boutique"
-                    hint="Masquée, elle disparaît du menu et de la page boutique."
+                    label={t("a.categories.visible")}
+                    hint={t("a.categories.visibleHint")}
                   />
                 </div>
               </div>
 
               <div className="mt-7 flex gap-3">
                 <Button type="submit" loading={saving} className="flex-1">
-                  {draft.id ? "Enregistrer" : "Créer"}
+                  {draft.id ? t("a.save") : t("a.create")}
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setDraft(null)}
                 >
-                  Annuler
+                  {t("a.cancel")}
                 </Button>
               </div>
             </motion.form>

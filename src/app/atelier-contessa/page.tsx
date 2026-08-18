@@ -9,11 +9,14 @@ import { KeyRound, Loader2, Lock } from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import { Logo } from "@/components/storefront/logo";
 import { useAdminSession } from "@/lib/admin-session";
+import { useI18n } from "@/lib/i18n/provider";
+import { LanguageSwitcher } from "@/components/storefront/language-switcher";
 import { ADMIN_PATH } from "@/lib/admin-path";
 import { cleanConvexError } from "@/lib/errors";
 
 export default function AtelierGatePage() {
   const router = useRouter();
+  const { t } = useI18n();
   const { authenticated, signIn } = useAdminSession();
   const needsSetup = useQuery(api.admin.needsSetup, {});
   const login = useMutation(api.admin.login);
@@ -32,7 +35,7 @@ export default function AtelierGatePage() {
     if (busy) return;
 
     if (needsSetup && password !== confirm) {
-      toast.error("Les deux mots de passe ne correspondent pas.");
+      toast.error(t("a.login.mismatch"));
       return;
     }
 
@@ -58,6 +61,12 @@ export default function AtelierGatePage() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-sm"
       >
+        {/* Language is switchable before signing in — the owner may not read
+            French, and this is the first screen they ever see. */}
+        <div className="mb-6 flex justify-center">
+          <LanguageSwitcher />
+        </div>
+
         <Logo variant="full" className="mx-auto w-36" priority />
 
         <div className="surface-card mt-8 p-7">
@@ -68,20 +77,18 @@ export default function AtelierGatePage() {
               <Lock className="size-4 text-gold" strokeWidth={1.5} />
             )}
             <h1 className="text-[0.65rem] tracking-luxe text-gold">
-              {needsSetup ? "Première visite" : "Atelier privé"}
+              {needsSetup ? t("a.login.setupTitle") : t("a.login.loginTitle")}
             </h1>
           </div>
 
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            {needsSetup
-              ? "Choisissez le mot de passe qui protégera votre tableau de bord. Notez-le bien — il n'est stocké nulle part en clair."
-              : "Entrez votre mot de passe pour accéder au tableau de bord."}
+            {needsSetup ? t("a.login.setupBody") : t("a.login.loginBody")}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             <label className="block">
               <span className="mb-2 block text-[0.6rem] tracking-luxe-sm text-muted">
-                Mot de passe
+                {t("a.login.password")}
               </span>
               <input
                 required
@@ -98,7 +105,7 @@ export default function AtelierGatePage() {
             {needsSetup && (
               <label className="block">
                 <span className="mb-2 block text-[0.6rem] tracking-luxe-sm text-muted">
-                  Confirmer le mot de passe
+                  {t("a.login.confirm")}
                 </span>
                 <input
                   required
@@ -118,13 +125,13 @@ export default function AtelierGatePage() {
               className="btn-gold flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-[0.65rem] tracking-luxe-sm disabled:opacity-60"
             >
               {busy && <Loader2 className="size-3.5 animate-spin" />}
-              {needsSetup ? "Créer mon accès" : "Entrer"}
+              {needsSetup ? t("a.login.createAccess") : t("a.login.enter")}
             </button>
           </form>
         </div>
 
         <p className="mt-6 text-center text-[0.6rem] tracking-luxe-sm text-muted">
-          Contessa · Espace propriétaire
+          {t("a.login.ownerSpace")}
         </p>
       </motion.div>
     </div>

@@ -22,16 +22,19 @@ import { api } from "@cvx/_generated/api";
 import { useAdminSession } from "@/lib/admin-session";
 import { ADMIN_PATH } from "@/lib/admin-path";
 import { Logo } from "@/components/storefront/logo";
+import { LanguageSwitcher } from "@/components/storefront/language-switcher";
+import { useI18n } from "@/lib/i18n/provider";
+import type { AnyTranslationKey } from "@/lib/i18n/dictionaries";
 import { cn } from "@/lib/utils";
 
-const NAV = [
-  { href: "", label: "Aperçu", Icon: LayoutGrid },
-  { href: "/orders", label: "Commandes", Icon: ShoppingCart },
-  { href: "/products", label: "Produits", Icon: Package },
-  { href: "/categories", label: "Catégories", Icon: Tags },
-  { href: "/delivery", label: "Livraison", Icon: Truck },
-  { href: "/theme", label: "Thème", Icon: Palette },
-  { href: "/settings", label: "Réglages", Icon: Settings },
+const NAV: { href: string; label: AnyTranslationKey; Icon: typeof LayoutGrid }[] = [
+  { href: "", label: "a.nav.overview", Icon: LayoutGrid },
+  { href: "/orders", label: "a.nav.orders", Icon: ShoppingCart },
+  { href: "/products", label: "a.nav.products", Icon: Package },
+  { href: "/categories", label: "a.nav.categories", Icon: Tags },
+  { href: "/delivery", label: "a.nav.delivery", Icon: Truck },
+  { href: "/theme", label: "a.nav.theme", Icon: Palette },
+  { href: "/settings", label: "a.nav.settings", Icon: Settings },
 ];
 
 export default function DashboardLayout({
@@ -39,6 +42,7 @@ export default function DashboardLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useI18n();
   const { authenticated, token, signOut } = useAdminSession();
   const logout = useMutation(api.admin.logout);
   const [navOpen, setNavOpen] = useState(false);
@@ -81,18 +85,18 @@ export default function DashboardLayout({
         <button
           type="button"
           onClick={() => setNavOpen(true)}
-          aria-label="Ouvrir le menu"
+          aria-label={t("a.nav.openMenu")}
           className="grid size-10 place-items-center text-ink"
         >
           <Menu className="size-5" strokeWidth={1.5} />
         </button>
         <span className="font-display text-lg tracking-luxe text-ink">
-          Atelier
+          {t("a.nav.atelier")}
         </span>
         <Link
           href="/"
           target="_blank"
-          aria-label="Voir la boutique"
+          aria-label={t("a.nav.viewShop")}
           className="grid size-10 place-items-center text-muted"
         >
           <ExternalLink className="size-4" strokeWidth={1.5} />
@@ -121,7 +125,7 @@ export default function DashboardLayout({
               <button
                 type="button"
                 onClick={() => setNavOpen(false)}
-                aria-label="Fermer le menu"
+                aria-label={t("a.nav.closeMenu")}
                 className="absolute right-3 top-3 grid size-9 place-items-center text-muted"
               >
                 <X className="size-4" strokeWidth={1.5} />
@@ -152,13 +156,18 @@ function SidebarContent({
   pathname: string;
   onSignOut: () => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <>
       <div className="border-b border-line px-5 py-6">
         <Logo variant="full" className="w-28" />
         <p className="mt-3 text-[0.55rem] tracking-luxe text-gold">
-          Tableau de bord
+          {t("a.nav.dashboard")}
         </p>
+        <div className="mt-4">
+          <LanguageSwitcher variant="list" />
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
@@ -179,7 +188,7 @@ function SidebarContent({
               )}
             >
               <Icon className="size-4 shrink-0" strokeWidth={1.5} />
-              {label}
+              {t(label)}
             </Link>
           );
         })}
@@ -192,7 +201,7 @@ function SidebarContent({
           className="flex items-center gap-3 rounded-[var(--c-radius)] px-3.5 py-2.5 text-sm text-muted transition-colors hover:bg-bg hover:text-ink"
         >
           <ExternalLink className="size-4 shrink-0" strokeWidth={1.5} />
-          Voir la boutique
+          {t("a.nav.viewShop")}
         </Link>
         <button
           type="button"
@@ -200,7 +209,7 @@ function SidebarContent({
           className="flex w-full items-center gap-3 rounded-[var(--c-radius)] px-3.5 py-2.5 text-sm text-muted transition-colors hover:bg-bg hover:text-ink"
         >
           <LogOut className="size-4 shrink-0" strokeWidth={1.5} />
-          Se déconnecter
+          {t("a.nav.signOut")}
         </button>
       </div>
     </>

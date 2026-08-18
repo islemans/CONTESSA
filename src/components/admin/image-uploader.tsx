@@ -9,6 +9,7 @@ import { ImagePlus, Loader2, X } from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import type { Id } from "@cvx/_generated/dataModel";
 import { useAdminSession } from "@/lib/admin-session";
+import { useI18n } from "@/lib/i18n/provider";
 import { cleanConvexError } from "@/lib/errors";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ export function ImageUploader({
   label: string;
   hint?: string;
 }) {
+  const { t } = useI18n();
   const { token } = useAdminSession();
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,11 +50,11 @@ export function ImageUploader({
     const chosen = Array.from(files).slice(0, multiple ? 12 : 1);
     const valid = chosen.filter((file) => {
       if (!ACCEPTED.includes(file.type)) {
-        toast.error(`${file.name} : format non pris en charge.`);
+        toast.error(t("a.upload.unsupported", { name: file.name }));
         return false;
       }
       if (file.size > MAX_BYTES) {
-        toast.error(`${file.name} : dépasse 10 Mo.`);
+        toast.error(t("a.upload.tooBig", { name: file.name }));
         return false;
       }
       return true;
@@ -70,7 +72,7 @@ export function ImageUploader({
             body: file,
           });
           if (!response.ok) {
-            throw new Error(`Échec de l'envoi de ${file.name}.`);
+            throw new Error(t("a.upload.failed", { name: file.name }));
           }
           const { storageId } = (await response.json()) as {
             storageId: Id<"_storage">;
@@ -81,7 +83,9 @@ export function ImageUploader({
 
       onChange(multiple ? [...value, ...uploaded] : uploaded);
       toast.success(
-        uploaded.length === 1 ? "Photo ajoutée" : `${uploaded.length} photos ajoutées`,
+        uploaded.length === 1
+          ? t("a.upload.photoAdded")
+          : t("a.upload.photosAdded", { n: uploaded.length }),
       );
     } catch (error) {
       toast.error(cleanConvexError(error));
@@ -129,14 +133,14 @@ export function ImageUploader({
               <button
                 type="button"
                 onClick={() => removeAt(index)}
-                aria-label="Retirer la photo"
+                aria-label={t("a.upload.removePhoto")}
                 className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <X className="size-3.5" strokeWidth={2} />
               </button>
               {index === 0 && multiple && (
                 <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[0.55rem] text-white">
-                  1ʳᵉ
+                  {t("a.upload.first")}
                 </span>
               )}
             </motion.div>
@@ -158,7 +162,9 @@ export function ImageUploader({
             ) : (
               <span className="flex flex-col items-center gap-2 px-2 text-center">
                 <ImagePlus className="size-5" strokeWidth={1.5} />
-                <span className="text-[0.55rem] tracking-luxe-sm">Ajouter</span>
+                <span className="text-[0.55rem] tracking-luxe-sm">
+                  {t("a.upload.add")}
+                </span>
               </span>
             )}
           </button>

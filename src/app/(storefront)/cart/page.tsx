@@ -6,10 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { useCart, lineKey } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n/provider";
-import { formatDA } from "@/lib/utils";
 
 export default function CartPage() {
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const { lines, subtotal, count, setQuantity, remove, ready } = useCart();
 
   if (!ready) {
@@ -138,7 +137,7 @@ export default function CartPage() {
                     </div>
 
                     <span className="text-sm font-medium text-ink">
-                      {formatDA(line.price * line.quantity)}
+                      {money(line.price * line.quantity)}
                     </span>
                   </div>
                 </div>
@@ -153,7 +152,7 @@ export default function CartPage() {
           <span className="text-muted">
             {t("cart.subtotalLine", { n: count })}
           </span>
-          <span className="font-medium text-ink">{formatDA(subtotal)}</span>
+          <span className="font-medium text-ink">{money(subtotal)}</span>
         </div>
         <p className="mt-2 text-xs text-muted">{t("cart.deliveryLater")}</p>
 

@@ -10,6 +10,13 @@
  *
  * `{x}` placeholders are substituted by `t()`.
  */
+import {
+  adminAr,
+  adminEn,
+  adminFr,
+  type AdminTranslationKey,
+} from "./admin-dictionaries";
+
 export const fr = {
   // Language names, shown in their own language in the switcher.
   "lang.fr": "Français",
@@ -95,6 +102,9 @@ export const fr = {
   "product.chooseColour": "Choisissez une couleur.",
   "product.added": "Ajouté à votre panier",
   "product.discount": "Remise",
+  "product.previousPhoto": "Photo précédente",
+  "product.nextPhoto": "Photo suivante",
+  "product.zoom": "Agrandir la photo",
 
   // Quick order (straight from the product page)
   "quick.title": "Commander directement",
@@ -260,6 +270,9 @@ export const ar: Record<TranslationKey, string> = {
   "product.chooseColour": "اختاري اللون.",
   "product.added": "تمت الإضافة إلى سلتك",
   "product.discount": "تخفيض",
+  "product.previousPhoto": "الصورة السابقة",
+  "product.nextPhoto": "الصورة التالية",
+  "product.zoom": "تكبير الصورة",
 
   "quick.title": "اطلبي مباشرة",
   "quick.subtitle":
@@ -417,6 +430,9 @@ export const en: Record<TranslationKey, string> = {
   "product.chooseColour": "Please choose a colour.",
   "product.added": "Added to your bag",
   "product.discount": "Off",
+  "product.previousPhoto": "Previous photo",
+  "product.nextPhoto": "Next photo",
+  "product.zoom": "Zoom in",
 
   "quick.title": "Order directly",
   "quick.subtitle":
@@ -503,10 +519,16 @@ export const en: Record<TranslationKey, string> = {
 export const LOCALES = ["fr", "ar", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-export const DICTIONARIES: Record<Locale, Record<TranslationKey, string>> = {
-  fr,
-  ar,
-  en,
+/**
+ * Storefront and dashboard copy in one lookup, so `t()` works the same on both
+ * sides. They live in separate files only because a single one got unwieldy.
+ */
+export type AnyTranslationKey = TranslationKey | AdminTranslationKey;
+
+export const DICTIONARIES: Record<Locale, Record<AnyTranslationKey, string>> = {
+  fr: { ...fr, ...adminFr },
+  ar: { ...ar, ...adminAr },
+  en: { ...en, ...adminEn },
 };
 
 /** Arabic is the only right-to-left language here. */

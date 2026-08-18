@@ -3,7 +3,7 @@
 import { Building2, Home } from "lucide-react";
 import { useI18n } from "@/lib/i18n/provider";
 import type { useDeliveryChoice } from "@/lib/use-delivery-choice";
-import { cn, formatDA } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export const inputClass =
   "w-full rounded-[var(--c-radius)] border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-muted/70 transition-colors focus:border-gold focus:outline-none";
@@ -209,7 +209,7 @@ function DeliveryOption({
   disabled: boolean;
   onSelect: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, money } = useI18n();
 
   return (
     <button
@@ -238,7 +238,7 @@ function DeliveryOption({
               price === 0 ? "text-accent" : "text-ink",
             )}
           >
-            {price === 0 ? t("checkout.free") : formatDA(price)}
+            {price === 0 ? t("checkout.free") : money(price)}
           </span>
         )}
       </span>

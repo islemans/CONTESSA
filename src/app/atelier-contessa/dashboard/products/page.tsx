@@ -18,9 +18,11 @@ import {
   TableSkeleton,
   fieldClass,
 } from "@/components/admin/ui";
-import { cn, formatDA } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/provider";
 
 export default function ProductsPage() {
+  const { t, money } = useI18n();
   const { token } = useAdminSession();
   const products = useQuery(api.products.listAll, token ? { token } : "skip");
   const toggleField = useMutation(api.products.toggle);
@@ -47,12 +49,12 @@ export default function ProductsPage() {
 
   const handleDelete = async (id: Id<"products">, name: string) => {
     if (!token) return;
-    if (!confirm(`Supprimer « ${name} » ? Les photos seront effacées aussi.`)) {
+    if (!confirm(t("a.products.confirmDelete", { name }))) {
       return;
     }
     try {
       await removeProduct({ token, id });
-      toast.success("Produit supprimé");
+      toast.success(t("a.products.deleted"));
     } catch (error) {
       toast.error(cleanConvexError(error));
     }
@@ -61,14 +63,14 @@ export default function ProductsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Catalogue"
-        title="Produits"
-        description="Ajoutez vos pièces, leurs photos, tailles, couleurs et prix."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.products")}
+        description={t("a.products.description")}
         action={
           <Link href={`${base}/new`}>
             <Button>
               <Plus className="size-3.5" strokeWidth={2} />
-              Nouveau produit
+              {t("a.products.new")}
             </Button>
           </Link>
         }
@@ -83,7 +85,7 @@ export default function ProductsPage() {
           <input
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            placeholder="Rechercher un produit…"
+            placeholder={t("a.products.search")}
             className={`${fieldClass} pl-11`}
           />
         </div>
@@ -93,18 +95,16 @@ export default function ProductsPage() {
         <TableSkeleton />
       ) : visible.length === 0 ? (
         <EmptyState
-          title={term ? "Aucun résultat" : "Aucun produit"}
+          title={term ? t("a.products.noResults") : t("a.products.none")}
           body={
-            term
-              ? "Essayez un autre mot-clé."
-              : "Ajoutez votre première pièce pour ouvrir la boutique."
+            term ? t("a.products.noResultsBody") : t("a.products.noneBody")
           }
           action={
             !term && (
               <Link href={`${base}/new`}>
                 <Button>
                   <Plus className="size-3.5" strokeWidth={2} />
-                  Nouveau produit
+                  {t("a.products.new")}
                 </Button>
               </Link>
             )
@@ -144,27 +144,28 @@ export default function ProductsPage() {
                   {product.name}
                 </Link>
                 <p className="mt-0.5 truncate text-[0.62rem] tracking-luxe-sm text-muted">
-                  {product.categoryName ?? "Sans catégorie"}
-                  {product.trackStock && ` · ${product.stock} en stock`}
+                  {product.categoryName ?? t("a.products.noCategory")}
+                  {product.trackStock &&
+                    ` · ${t("a.products.inStock", { n: product.stock })}`}
                 </p>
                 <p className="mt-1 text-sm font-medium text-accent sm:hidden">
-                  {formatDA(product.price)}
+                  {money(product.price)}
                 </p>
               </div>
 
               <span className="hidden shrink-0 text-sm font-medium text-ink sm:block">
-                {formatDA(product.price)}
+                {money(product.price)}
               </span>
 
               <div className="flex shrink-0 items-center gap-0.5">
                 <button
                   type="button"
                   onClick={() => handleToggle(product._id, "isFeatured")}
-                  aria-label="Mettre en avant"
+                  aria-label={t("a.products.feature")}
                   title={
                     product.isFeatured
-                      ? "En vedette sur l'accueil"
-                      : "Mettre en vedette"
+                      ? t("a.products.featured")
+                      : t("a.products.feature")
                   }
                   className={cn(
                     "grid size-9 place-items-center rounded-full transition-colors",
@@ -183,8 +184,14 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={() => handleToggle(product._id, "isActive")}
-                  aria-label={product.isActive ? "Masquer" : "Publier"}
-                  title={product.isActive ? "Visible en boutique" : "Masqué"}
+                  aria-label={
+                    product.isActive ? t("a.products.hide") : t("a.products.publish")
+                  }
+                  title={
+                    product.isActive
+                      ? t("a.products.visibleInShop")
+                      : t("a.products.hidden")
+                  }
                   className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:text-accent"
                 >
                   {product.isActive ? (
@@ -196,7 +203,7 @@ export default function ProductsPage() {
 
                 <Link
                   href={`${base}/${product._id}`}
-                  aria-label="Modifier"
+                  aria-label={t("a.edit")}
                   className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:text-accent"
                 >
                   <Pencil className="size-4" strokeWidth={1.5} />
@@ -205,7 +212,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   onClick={() => handleDelete(product._id, product.name)}
-                  aria-label="Supprimer"
+                  aria-label={t("a.delete")}
                   className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:text-red-500"
                 >
                   <Trash2 className="size-4" strokeWidth={1.5} />

@@ -6,15 +6,17 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "convex/react";
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { ChevronRight, Search, ShoppingBag, X } from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/lib/i18n/provider";
 import { localizedName } from "@/lib/i18n/localize";
-import { cn, formatDA } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { LogoLockup } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { LanguageSwitcher } from "./language-switcher";
+import { MenuIcon } from "./menu-icon";
+import { Logo } from "./logo";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -82,9 +84,10 @@ export function TopBar() {
               type="button"
               onClick={() => setMenuOpen(true)}
               aria-label={t("nav.openMenu")}
-              className="-ms-2 grid size-10 place-items-center text-ink lg:hidden"
+              aria-expanded={menuOpen}
+              className="-ms-2 grid size-10 place-items-center text-ink transition-colors hover:text-accent lg:hidden"
             >
-              <Menu className="size-5" strokeWidth={1.5} />
+              <MenuIcon open={menuOpen} />
             </button>
 
             <LogoLockup className="lg:flex-none" />
@@ -208,7 +211,7 @@ function MobileDrawer({
           className="fixed inset-0 z-[60] lg:hidden"
         >
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-md"
             onClick={onClose}
           />
 
@@ -217,72 +220,56 @@ function MobileDrawer({
             initial={{ x: isRtl ? "100%" : "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: isRtl ? "100%" : "-100%" }}
-            transition={{ duration: 0.42, ease: EASE }}
-            className="absolute inset-y-0 start-0 flex w-[86%] max-w-sm flex-col bg-bg shadow-2xl"
+            transition={{ duration: 0.45, ease: EASE }}
+            className="absolute inset-y-0 start-0 flex w-[88%] max-w-sm flex-col bg-bg shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
-              <span className="font-display text-lg tracking-luxe">
-                {t("nav.menu")}
-              </span>
+            {/* Brand mark rather than the word "Menu" — the drawer is the shop,
+                so it should open on the shop's identity. */}
+            <div className="relative flex items-center justify-between px-5 pb-5 pt-5">
+              <Logo variant="mark" className="h-10" />
               <button
                 type="button"
                 onClick={onClose}
                 aria-label={t("nav.closeMenu")}
-                className="grid size-9 place-items-center rounded-full text-ink"
+                className="grid size-10 place-items-center rounded-full border border-line text-ink transition-colors hover:border-gold hover:text-accent"
               >
-                <X className="size-5" strokeWidth={1.5} />
+                <X className="size-4" strokeWidth={1.5} />
               </button>
+              <Hairline className="absolute inset-x-5 bottom-0" />
             </div>
 
-            <nav className="flex-1 overflow-y-auto px-5 py-6">
-              <Link
+            <nav className="flex-1 overflow-y-auto px-5 py-4">
+              <DrawerRow
                 href="/shop"
-                className="block border-b border-line py-4 font-display text-2xl text-ink"
-              >
-                {t("nav.allShop")}
-              </Link>
+                index={0}
+                isRtl={isRtl}
+                label={t("nav.allShop")}
+                emphasis
+              />
 
               {categories.map((category, index) => (
-                <motion.div
+                <DrawerRow
                   key={category._id}
-                  initial={{ opacity: 0, x: isRtl ? 16 : -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.06 * index + 0.1, duration: 0.4, ease: EASE }}
-                >
-                  <Link
-                    href={`/shop?c=${category.slug}`}
-                    className="flex items-center gap-4 border-b border-line py-4"
-                  >
-                    {category.imageUrl ? (
-                      <Image
-                        src={category.imageUrl}
-                        alt=""
-                        width={48}
-                        height={64}
-                        className="h-16 w-12 rounded-md object-cover"
-                      />
-                    ) : (
-                      <span className="grid h-16 w-12 place-items-center rounded-md border border-line font-display text-lg text-gold">
-                        {category.name.charAt(0)}
-                      </span>
-                    )}
-                    <span className="font-display text-xl text-ink">
-                      {localizedName(category, locale)}
-                    </span>
-                  </Link>
-                </motion.div>
+                  href={`/shop?c=${category.slug}`}
+                  index={index + 1}
+                  isRtl={isRtl}
+                  label={localizedName(category, locale)}
+                  imageUrl={category.imageUrl}
+                  fallback={category.name.charAt(0)}
+                />
               ))}
             </nav>
 
-            <div className="space-y-4 border-t border-line px-5 py-4">
+            <div className="relative space-y-4 px-5 pb-6 pt-5">
+              <Hairline className="absolute inset-x-5 top-0" />
               <div className="flex items-center justify-between">
-                <span className="text-[0.65rem] tracking-luxe-sm text-muted">
+                <span className="text-[0.6rem] tracking-luxe-sm text-muted">
                   {t("nav.theme")}
                 </span>
                 <ThemeToggle />
               </div>
               <div>
-                <span className="mb-2 block text-[0.65rem] tracking-luxe-sm text-muted">
+                <span className="mb-2.5 block text-[0.6rem] tracking-luxe-sm text-muted">
                   {t("lang.label")}
                 </span>
                 <LanguageSwitcher variant="list" />
@@ -295,8 +282,90 @@ function MobileDrawer({
   );
 }
 
+/**
+ * Divider that fades out at both ends instead of butting into the padding.
+ * A hard edge-to-edge rule is what made the drawer read as a plain list.
+ */
+function Hairline({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn("block h-px", className)}
+      style={{
+        background:
+          "linear-gradient(to right, transparent, var(--c-border) 15%, var(--c-border) 85%, transparent)",
+      }}
+    />
+  );
+}
+
+function DrawerRow({
+  href,
+  label,
+  index,
+  isRtl,
+  imageUrl,
+  fallback,
+  emphasis = false,
+}: {
+  href: string;
+  label: string;
+  index: number;
+  isRtl: boolean;
+  imageUrl?: string | null;
+  fallback?: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: isRtl ? 24 : -24 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.05 * index + 0.12, duration: 0.45, ease: EASE }}
+      className="relative"
+    >
+      <Link
+        href={href}
+        className="group flex items-center gap-4 py-3.5 active:scale-[0.99] transition-transform"
+      >
+        {imageUrl !== undefined &&
+          (imageUrl ? (
+            <span className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg">
+              <Image
+                src={imageUrl}
+                alt=""
+                fill
+                sizes="48px"
+                className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110"
+              />
+            </span>
+          ) : (
+            <span className="grid h-16 w-12 shrink-0 place-items-center rounded-lg border border-line font-display text-lg text-gold">
+              {fallback}
+            </span>
+          ))}
+
+        <span
+          className={cn(
+            "flex-1 font-display text-ink transition-colors group-hover:text-accent",
+            emphasis ? "text-2xl" : "text-xl",
+          )}
+        >
+          {label}
+        </span>
+
+        {/* Nudges towards the reading direction on press. */}
+        <ChevronRight
+          className="size-4 shrink-0 text-muted transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:text-accent rtl:rotate-180 ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1"
+          strokeWidth={1.5}
+        />
+      </Link>
+      <Hairline />
+    </motion.div>
+  );
+}
+
 function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const [term, setTerm] = useState("");
   // "skip" keeps Convex from firing a query for every keystroke under 2 chars.
   const results = useQuery(
@@ -375,7 +444,7 @@ function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }
                       </span>
                     </span>
                     <span className="shrink-0 text-sm font-medium text-accent">
-                      {formatDA(product.price)}
+                      {money(product.price)}
                     </span>
                   </Link>
                 ))}

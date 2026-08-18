@@ -7,6 +7,7 @@ import { KeyRound } from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import { useAdminSession } from "@/lib/admin-session";
 import { cleanConvexError } from "@/lib/errors";
+import { useI18n } from "@/lib/i18n/provider";
 import {
   Button,
   Card,
@@ -17,6 +18,7 @@ import {
 } from "@/components/admin/ui";
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const { token, signOut } = useAdminSession();
   const settings = useQuery(api.settings.get, {});
   const updateSettings = useMutation(api.settings.update);
@@ -70,7 +72,7 @@ export default function SettingsPage() {
         ...form,
         freeDeliveryThreshold: Number(form.freeDeliveryThreshold) || 0,
       });
-      toast.success("Réglages enregistrés");
+      toast.success(t("a.settings.saved"));
     } catch (error) {
       toast.error(cleanConvexError(error));
     } finally {
@@ -83,14 +85,14 @@ export default function SettingsPage() {
     if (!token || changing) return;
 
     if (next !== confirm) {
-      toast.error("Les deux mots de passe ne correspondent pas.");
+      toast.error(t("a.login.mismatch"));
       return;
     }
 
     setChanging(true);
     try {
       await changePassword({ token, current, next });
-      toast.success("Mot de passe modifié — reconnectez-vous.");
+      toast.success(t("a.settings.changed"));
       // The server revoked every session, including this one.
       signOut();
     } catch (error) {
@@ -102,27 +104,29 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Configuration"
-        title="Réglages"
-        description="Identité de la boutique, coordonnées, bandeau d'annonce et sécurité."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.settings")}
+        description={t("a.settings.description")}
       />
 
       <form onSubmit={handleSave} className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-[0.6rem] tracking-luxe text-gold">Identité</h2>
+          <h2 className="text-[0.6rem] tracking-luxe text-gold">
+            {t("a.settings.identity")}
+          </h2>
           <div className="mt-5 space-y-5">
-            <Field label="Nom de la boutique">
+            <Field label={t("a.settings.siteName")}>
               <input
                 value={form.siteName}
                 onChange={(e) => setForm({ ...form, siteName: e.target.value })}
                 className={fieldClass}
               />
             </Field>
-            <Field label="Slogan">
+            <Field label={t("a.settings.tagline")}>
               <input
                 value={form.tagline}
                 onChange={(e) => setForm({ ...form, tagline: e.target.value })}
-                placeholder="Beauté & Élégance"
+                placeholder={t("hero.tagline")}
                 className={fieldClass}
               />
             </Field>
@@ -130,18 +134,20 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <h2 className="text-[0.6rem] tracking-luxe text-gold">Bandeau</h2>
+          <h2 className="text-[0.6rem] tracking-luxe text-gold">
+            {t("a.settings.banner")}
+          </h2>
           <div className="mt-5 space-y-5">
             <Field
-              label="Message d'annonce"
-              hint="La bande dorée tout en haut du site."
+              label={t("a.settings.announcement")}
+              hint={t("a.settings.announcementHint")}
             >
               <input
                 value={form.announcement}
                 onChange={(e) =>
                   setForm({ ...form, announcement: e.target.value })
                 }
-                placeholder="Livraison offerte dès 8000 DA"
+                placeholder={t("a.settings.announcementPlaceholder")}
                 className={fieldClass}
               />
             </Field>
@@ -150,15 +156,17 @@ export default function SettingsPage() {
               onChange={(announcementActive) =>
                 setForm({ ...form, announcementActive })
               }
-              label="Afficher le bandeau"
+              label={t("a.settings.showBanner")}
             />
           </div>
         </Card>
 
         <Card>
-          <h2 className="text-[0.6rem] tracking-luxe text-gold">Contact</h2>
+          <h2 className="text-[0.6rem] tracking-luxe text-gold">
+            {t("a.settings.contact")}
+          </h2>
           <div className="mt-5 space-y-5">
-            <Field label="Téléphone">
+            <Field label={t("a.settings.phone")}>
               <input
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -166,7 +174,7 @@ export default function SettingsPage() {
                 className={fieldClass}
               />
             </Field>
-            <Field label="E-mail">
+            <Field label={t("a.settings.email")}>
               <input
                 type="email"
                 value={form.email}
@@ -174,7 +182,7 @@ export default function SettingsPage() {
                 className={fieldClass}
               />
             </Field>
-            <Field label="Instagram" hint="Lien complet">
+            <Field label={t("a.settings.instagram")} hint={t("a.settings.fullLink")}>
               <input
                 value={form.instagram}
                 onChange={(e) => setForm({ ...form, instagram: e.target.value })}
@@ -182,14 +190,14 @@ export default function SettingsPage() {
                 className={fieldClass}
               />
             </Field>
-            <Field label="Facebook" hint="Lien complet">
+            <Field label={t("a.settings.facebook")} hint={t("a.settings.fullLink")}>
               <input
                 value={form.facebook}
                 onChange={(e) => setForm({ ...form, facebook: e.target.value })}
                 className={fieldClass}
               />
             </Field>
-            <Field label="TikTok" hint="Lien complet">
+            <Field label={t("a.settings.tiktok")} hint={t("a.settings.fullLink")}>
               <input
                 value={form.tiktok}
                 onChange={(e) => setForm({ ...form, tiktok: e.target.value })}
@@ -200,17 +208,19 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <h2 className="text-[0.6rem] tracking-luxe text-gold">Commandes</h2>
+          <h2 className="text-[0.6rem] tracking-luxe text-gold">
+            {t("a.settings.ordersSection")}
+          </h2>
           <div className="mt-5 space-y-5">
             <Toggle
               checked={form.storeOpen}
               onChange={(storeOpen) => setForm({ ...form, storeOpen })}
-              label="Boutique ouverte"
-              hint="Fermée, le catalogue reste visible mais personne ne peut commander."
+              label={t("a.settings.storeOpen")}
+              hint={t("a.settings.storeOpenHint")}
             />
             <Field
-              label="Livraison offerte à partir de (DA)"
-              hint="Mettez 0 pour désactiver."
+              label={t("a.settings.freeThreshold")}
+              hint={t("a.settings.freeThresholdHint")}
             >
               <input
                 type="number"
@@ -228,7 +238,7 @@ export default function SettingsPage() {
 
         <div className="lg:col-span-2">
           <Button type="submit" loading={saving}>
-            Enregistrer les réglages
+            {t("a.settings.saveButton")}
           </Button>
         </div>
       </form>
@@ -236,15 +246,14 @@ export default function SettingsPage() {
       <Card className="mt-6 max-w-lg">
         <h2 className="flex items-center gap-2 text-[0.6rem] tracking-luxe text-gold">
           <KeyRound className="size-3.5" strokeWidth={1.5} />
-          Mot de passe
+          {t("a.settings.password")}
         </h2>
         <p className="mt-2 text-xs text-muted">
-          En le changeant, toutes les sessions ouvertes sont fermées — y compris
-          celle-ci.
+          {t("a.settings.passwordBody")}
         </p>
 
         <form onSubmit={handlePassword} className="mt-5 space-y-5">
-          <Field label="Mot de passe actuel" required>
+          <Field label={t("a.settings.current")} required>
             <input
               required
               type="password"
@@ -254,7 +263,11 @@ export default function SettingsPage() {
               className={fieldClass}
             />
           </Field>
-          <Field label="Nouveau mot de passe" required hint="8 caractères minimum">
+          <Field
+            label={t("a.settings.newPassword")}
+            required
+            hint={t("a.settings.newPasswordHint")}
+          >
             <input
               required
               type="password"
@@ -265,7 +278,7 @@ export default function SettingsPage() {
               className={fieldClass}
             />
           </Field>
-          <Field label="Confirmer le nouveau mot de passe" required>
+          <Field label={t("a.settings.confirmPassword")} required>
             <input
               required
               type="password"
@@ -277,7 +290,7 @@ export default function SettingsPage() {
             />
           </Field>
           <Button type="submit" variant="ghost" loading={changing}>
-            Changer le mot de passe
+            {t("a.settings.changeButton")}
           </Button>
         </form>
       </Card>

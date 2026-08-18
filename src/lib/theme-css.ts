@@ -1,18 +1,28 @@
 import { DEFAULT_SETTINGS } from "@cvx/lib/defaults";
+import type { AnyTranslationKey } from "./i18n/dictionaries";
 
 export type ThemeTokens = typeof DEFAULT_SETTINGS.theme.light;
 export type ThemeConfig = typeof DEFAULT_SETTINGS.theme;
 export type SiteSettings = typeof DEFAULT_SETTINGS;
 
-export const TOKEN_LABELS: { key: keyof ThemeTokens; label: string; hint: string }[] = [
-  { key: "bg", label: "Background", hint: "Page canvas" },
-  { key: "surface", label: "Surface", hint: "Cards, bars, sheets" },
-  { key: "ink", label: "Text", hint: "Headings and body copy" },
-  { key: "muted", label: "Muted text", hint: "Captions and hints" },
-  { key: "accent", label: "Accent", hint: "Buttons and links" },
-  { key: "accentInk", label: "On accent", hint: "Text on accent fills" },
-  { key: "gold", label: "Gold", hint: "Rules, badges, shimmer" },
-  { key: "border", label: "Border", hint: "Hairlines and dividers" },
+/** Token rows for the theme editor, labelled through the dictionary. */
+export const TOKEN_LABELS: {
+  key: keyof ThemeTokens;
+  labelKey: AnyTranslationKey;
+  hintKey: AnyTranslationKey;
+}[] = [
+  { key: "bg", labelKey: "a.token.bg", hintKey: "a.token.bgHint" },
+  { key: "surface", labelKey: "a.token.surface", hintKey: "a.token.surfaceHint" },
+  { key: "ink", labelKey: "a.token.ink", hintKey: "a.token.inkHint" },
+  { key: "muted", labelKey: "a.token.muted", hintKey: "a.token.mutedHint" },
+  { key: "accent", labelKey: "a.token.accent", hintKey: "a.token.accentHint" },
+  {
+    key: "accentInk",
+    labelKey: "a.token.accentInk",
+    hintKey: "a.token.accentInkHint",
+  },
+  { key: "gold", labelKey: "a.token.gold", hintKey: "a.token.goldHint" },
+  { key: "border", labelKey: "a.token.border", hintKey: "a.token.borderHint" },
 ];
 
 function block(tokens: ThemeTokens): string {

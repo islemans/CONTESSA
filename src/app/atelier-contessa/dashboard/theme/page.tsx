@@ -11,17 +11,28 @@ import { DEFAULT_SETTINGS, THEME_PRESETS } from "@cvx/lib/defaults";
 import { useAdminSession } from "@/lib/admin-session";
 import { cleanConvexError } from "@/lib/errors";
 import { TOKEN_LABELS, type ThemeConfig, type ThemeTokens } from "@/lib/theme-css";
+import { useI18n } from "@/lib/i18n/provider";
+import type { AnyTranslationKey } from "@/lib/i18n/dictionaries";
 import { Button, Card, Field, PageHeader, Toggle, fieldClass } from "@/components/admin/ui";
 import { cn } from "@/lib/utils";
 
-const RADIUS_PRESETS = [
-  { label: "Net", value: "0rem" },
-  { label: "Doux", value: "0.5rem" },
-  { label: "Arrondi", value: "0.75rem" },
-  { label: "Très arrondi", value: "1.25rem" },
+const RADIUS_PRESETS: { key: AnyTranslationKey; value: string }[] = [
+  { key: "a.radius.sharp", value: "0rem" },
+  { key: "a.radius.soft", value: "0.5rem" },
+  { key: "a.radius.round", value: "0.75rem" },
+  { key: "a.radius.veryRound", value: "1.25rem" },
 ];
 
+/** Preset id -> label/note keys, so the palettes read in the owner's language. */
+const PRESET_KEYS: Record<string, { label: AnyTranslationKey; note: AnyTranslationKey }> = {
+  contessa: { label: "a.preset.contessa", note: "a.preset.contessaNote" },
+  valentine: { label: "a.preset.valentine", note: "a.preset.valentineNote" },
+  ocean: { label: "a.preset.ocean", note: "a.preset.oceanNote" },
+  emerald: { label: "a.preset.emerald", note: "a.preset.emeraldNote" },
+};
+
 export default function ThemePage() {
+  const { t } = useI18n();
   const { token } = useAdminSession();
   const settings = useQuery(api.settings.get, {});
   const updateTheme = useMutation(api.settings.updateTheme);
@@ -45,7 +56,7 @@ export default function ThemePage() {
   if (!draft) {
     return (
       <>
-        <PageHeader eyebrow="Apparence" title="Thème" />
+        <PageHeader eyebrow={t("a.nav.atelier")} title={t("a.nav.theme")} />
         <div className="h-96 rounded-[var(--c-radius)] shimmer" />
       </>
     );
@@ -69,7 +80,7 @@ export default function ThemePage() {
         light: draft.light,
         dark: draft.dark,
       });
-      toast.success("Thème appliqué à toute la boutique");
+      toast.success(t("a.theme.applied"));
     } catch (error) {
       toast.error(cleanConvexError(error));
     } finally {
@@ -79,11 +90,11 @@ export default function ThemePage() {
 
   const handleReset = async () => {
     if (!token) return;
-    if (!confirm("Revenir au thème d'origine Contessa ?")) return;
+    if (!confirm(t("a.theme.confirmReset"))) return;
     try {
       await resetTheme({ token });
       setDraft(DEFAULT_SETTINGS.theme as ThemeConfig);
-      toast.success("Thème réinitialisé");
+      toast.success(t("a.theme.resetDone"));
     } catch (error) {
       toast.error(cleanConvexError(error));
     }
@@ -95,13 +106,13 @@ export default function ThemePage() {
   return (
     <>
       <PageHeader
-        eyebrow="Apparence"
-        title="Thème"
-        description="Ces couleurs pilotent tout le site en direct — aucune mise en ligne nécessaire. Les changements s'appliquent dès que vous enregistrez."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.theme")}
+        description={t("a.theme.description")}
         action={
           <Button variant="ghost" onClick={handleReset}>
             <RotateCcw className="size-3.5" strokeWidth={1.5} />
-            Réinitialiser
+            {t("a.theme.reset")}
           </Button>
         }
       />
@@ -111,12 +122,9 @@ export default function ThemePage() {
           <Card>
             <h2 className="flex items-center gap-2 text-[0.6rem] tracking-luxe text-gold">
               <Sparkles className="size-3.5" strokeWidth={1.5} />
-              Thèmes prêts à l&apos;emploi
+              {t("a.theme.presets")}
             </h2>
-            <p className="mt-2 text-xs text-muted">
-              Un clic remplace toutes les couleurs, en clair et en sombre. Vous
-              pouvez ensuite retoucher n&apos;importe quelle teinte ci-dessous.
-            </p>
+            <p className="mt-2 text-xs text-muted">{t("a.theme.presetsBody")}</p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {THEME_PRESETS.map((preset) => {
@@ -166,10 +174,10 @@ export default function ThemePage() {
                       )}
                     </span>
                     <span className="mt-3 block text-sm text-ink">
-                      {preset.label}
+                      {t(PRESET_KEYS[preset.id].label)}
                     </span>
                     <span className="mt-0.5 block text-[0.65rem] text-muted">
-                      {preset.note}
+                      {t(PRESET_KEYS[preset.id].note)}
                     </span>
                   </button>
                 );
@@ -179,11 +187,10 @@ export default function ThemePage() {
 
           <Card>
             <h2 className="text-[0.6rem] tracking-luxe text-gold">
-              Mode par défaut
+              {t("a.theme.defaultMode")}
             </h2>
             <p className="mt-2 text-xs text-muted">
-              Ce que voit une cliente qui arrive pour la première fois. Le logo
-              suit automatiquement : version claire ou version dorée.
+              {t("a.theme.defaultModeBody")}
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -206,10 +213,12 @@ export default function ThemePage() {
                   )}
                   <span>
                     <span className="block text-sm text-ink">
-                      {mode === "light" ? "Clair" : "Sombre"}
+                      {mode === "light" ? t("a.theme.light") : t("a.theme.dark")}
                     </span>
                     <span className="text-[0.62rem] text-muted">
-                      Logo {mode === "light" ? "rose gold" : "doré"}
+                      {mode === "light"
+                        ? t("a.theme.logoRose")
+                        : t("a.theme.logoGold")}
                     </span>
                   </span>
                 </button>
@@ -222,15 +231,17 @@ export default function ThemePage() {
                 onChange={(allowUserToggle) =>
                   setDraft({ ...draft, allowUserToggle })
                 }
-                label="Laisser la cliente changer de thème"
-                hint="Affiche le bouton soleil/lune dans la barre du haut."
+                label={t("a.theme.allowToggle")}
+                hint={t("a.theme.allowToggleHint")}
               />
             </div>
           </Card>
 
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-[0.6rem] tracking-luxe text-gold">Couleurs</h2>
+              <h2 className="text-[0.6rem] tracking-luxe text-gold">
+                {t("a.theme.colours")}
+              </h2>
 
               <div className="flex rounded-full border border-line p-1">
                 {(["light", "dark"] as const).map((mode) => (
@@ -245,7 +256,7 @@ export default function ThemePage() {
                         : "text-muted hover:text-accent",
                     )}
                   >
-                    {mode === "light" ? "Clair" : "Sombre"}
+                    {mode === "light" ? t("a.theme.light") : t("a.theme.dark")}
                   </button>
                 ))}
               </div>
@@ -260,7 +271,7 @@ export default function ThemePage() {
                 transition={{ duration: 0.25 }}
                 className="mt-5 grid gap-4 sm:grid-cols-2"
               >
-                {TOKEN_LABELS.map(({ key, label, hint }) => (
+                {TOKEN_LABELS.map(({ key, labelKey, hintKey }) => (
                   <div
                     key={key}
                     className="flex items-center gap-3 rounded-[var(--c-radius)] border border-line p-3"
@@ -269,17 +280,19 @@ export default function ThemePage() {
                       type="color"
                       value={tokens[key]}
                       onChange={(event) => setToken(key, event.target.value)}
-                      aria-label={label}
+                      aria-label={t(labelKey)}
                       className="size-10 shrink-0 cursor-pointer rounded-md border border-line bg-transparent p-0.5"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-ink">{label}</p>
-                      <p className="truncate text-[0.6rem] text-muted">{hint}</p>
+                      <p className="text-xs text-ink">{t(labelKey)}</p>
+                      <p className="truncate text-[0.6rem] text-muted">
+                        {t(hintKey)}
+                      </p>
                     </div>
                     <input
                       value={tokens[key]}
                       onChange={(event) => setToken(key, event.target.value)}
-                      aria-label={`${label} en hexadécimal`}
+                      aria-label={t("a.theme.hexOf", { label: t(labelKey) })}
                       className="w-20 shrink-0 rounded-md border border-line bg-bg px-2 py-1.5 text-[0.65rem] uppercase text-muted focus:border-gold focus:outline-none"
                     />
                   </div>
@@ -289,7 +302,9 @@ export default function ThemePage() {
           </Card>
 
           <Card>
-            <h2 className="text-[0.6rem] tracking-luxe text-gold">Arrondis</h2>
+            <h2 className="text-[0.6rem] tracking-luxe text-gold">
+              {t("a.theme.radius")}
+            </h2>
             <div className="mt-5 flex flex-wrap gap-2">
               {RADIUS_PRESETS.map((preset) => (
                 <button
@@ -303,11 +318,11 @@ export default function ThemePage() {
                       : "border-line text-muted hover:border-gold hover:text-accent",
                   )}
                 >
-                  {preset.label}
+                  {t(preset.key)}
                 </button>
               ))}
             </div>
-            <Field label="Valeur personnalisée" className="mt-5 max-w-xs">
+            <Field label={t("a.theme.radiusCustom")} className="mt-5 max-w-xs">
               <input
                 value={draft.radius}
                 onChange={(event) =>
@@ -329,12 +344,11 @@ export default function ThemePage() {
             disabled={!dirty}
             className="w-full"
           >
-            {dirty ? "Appliquer à la boutique" : "Aucun changement"}
+            {dirty ? t("a.theme.apply") : t("a.theme.noChange")}
           </Button>
 
           <p className="text-[0.65rem] leading-relaxed text-muted">
-            L&apos;aperçu utilise vos couleurs en direct. Une fois appliqué, le
-            site entier change instantanément pour toutes les visiteuses.
+            {t("a.theme.previewNote")}
           </p>
         </aside>
       </div>
@@ -344,6 +358,8 @@ export default function ThemePage() {
 
 /** Sandboxed swatch — inline vars so it previews without touching the page. */
 function Preview({ tokens, radius }: { tokens: ThemeTokens; radius: string }) {
+  const { t } = useI18n();
+
   return (
     <div
       style={{
@@ -357,18 +373,18 @@ function Preview({ tokens, radius }: { tokens: ThemeTokens; radius: string }) {
         className="text-[0.55rem] tracking-luxe"
         style={{ color: tokens.gold }}
       >
-        Aperçu
+        {t("a.theme.preview")}
       </p>
 
       <h3
         className="mt-3 font-display text-2xl"
         style={{ color: tokens.ink }}
       >
-        Rouge Contessa
+        {t("a.theme.previewProduct")}
       </h3>
 
       <p className="mt-2 text-xs" style={{ color: tokens.muted }}>
-        Fini mat, tenue 12 heures
+        {t("a.theme.previewDetail")}
       </p>
 
       <div
@@ -390,7 +406,7 @@ function Preview({ tokens, radius }: { tokens: ThemeTokens; radius: string }) {
           borderRadius: "999px",
         }}
       >
-        Ajouter au panier
+        {t("a.theme.previewCta")}
       </button>
 
       <div

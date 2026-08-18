@@ -8,19 +8,20 @@ import {
   useMemo,
   useState,
 } from "react";
+import { formatDA } from "@/lib/utils";
 import {
   DICTIONARIES,
   LOCALES,
   RTL_LOCALES,
+  type AnyTranslationKey,
   type Locale,
-  type TranslationKey,
 } from "./dictionaries";
 
 export const LOCALE_STORAGE_KEY = "contessa.locale";
 const DEFAULT_LOCALE: Locale = "fr";
 
 type Translate = (
-  key: TranslationKey,
+  key: AnyTranslationKey,
   vars?: Record<string, string | number>,
 ) => string;
 
@@ -30,6 +31,8 @@ type I18nValue = {
   isRtl: boolean;
   setLocale: (next: Locale) => void;
   t: Translate;
+  /** Price formatter bound to the active language. */
+  money: (amount: number) => string;
 };
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -97,7 +100,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       return text;
     };
 
-    return { locale, dir: isRtl ? "rtl" : "ltr", isRtl, setLocale, t };
+    const money = (amount: number) => formatDA(amount, locale);
+
+    return { locale, dir: isRtl ? "rtl" : "ltr", isRtl, setLocale, t, money };
   }, [locale, setLocale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

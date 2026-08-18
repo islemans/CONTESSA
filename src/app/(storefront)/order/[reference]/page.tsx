@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 import { Check, Package, Phone } from "lucide-react";
 import { api } from "@cvx/_generated/api";
 import { useI18n } from "@/lib/i18n/provider";
-import { formatDA, formatPhone } from "@/lib/utils";
+import { formatPhone } from "@/lib/utils";
 
 export default function OrderConfirmationPage() {
-  const { t } = useI18n();
+  const { t, money } = useI18n();
   const { reference } = useParams<{ reference: string }>();
   const order = useQuery(api.orders.getByReference, { reference });
 
@@ -85,7 +85,7 @@ export default function OrderConfirmationPage() {
                 </span>
               </span>
               <span className="shrink-0 text-ink">
-                {formatDA(item.price * item.quantity)}
+                {money(item.price * item.quantity)}
               </span>
             </li>
           ))}
@@ -94,7 +94,7 @@ export default function OrderConfirmationPage() {
         <dl className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted">{t("checkout.subtotal")}</dt>
-            <dd className="text-ink">{formatDA(order.subtotal)}</dd>
+            <dd className="text-ink">{money(order.subtotal)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted">
@@ -106,7 +106,7 @@ export default function OrderConfirmationPage() {
             <dd className="text-ink">
               {order.deliveryPrice === 0
                 ? t("checkout.free")
-                : formatDA(order.deliveryPrice)}
+                : money(order.deliveryPrice)}
             </dd>
           </div>
           <div className="flex items-baseline justify-between border-t border-line pt-3">
@@ -114,7 +114,7 @@ export default function OrderConfirmationPage() {
               {t("checkout.total")}
             </dt>
             <dd className="font-display text-2xl text-accent">
-              {formatDA(order.total)}
+              {money(order.total)}
             </dd>
           </div>
         </dl>

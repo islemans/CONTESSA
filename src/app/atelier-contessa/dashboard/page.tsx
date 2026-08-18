@@ -15,10 +15,12 @@ import { api } from "@cvx/_generated/api";
 import { useAdminSession } from "@/lib/admin-session";
 import { ADMIN_PATH } from "@/lib/admin-path";
 import { PageHeader, Card, EmptyState } from "@/components/admin/ui";
-import { formatDA, formatPhone } from "@/lib/utils";
+import { formatPhone } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/provider";
 import { StatusPill } from "@/components/admin/status-pill";
 
 export default function OverviewPage() {
+  const { t, money } = useI18n();
   const { token } = useAdminSession();
   const stats = useQuery(api.admin.overview, token ? { token } : "skip");
   const orders = useQuery(api.orders.list, token ? { token } : "skip");
@@ -28,40 +30,40 @@ export default function OverviewPage() {
 
   const tiles = [
     {
-      label: "Commandes",
+      label: t("a.overview.orders"),
       value: stats?.totalOrders,
       Icon: ShoppingCart,
       href: `${base}/orders`,
     },
     {
-      label: "En attente",
+      label: t("a.overview.pending"),
       value: stats?.pendingOrders,
       Icon: Clock,
       href: `${base}/orders`,
       highlight: (stats?.pendingOrders ?? 0) > 0,
     },
     {
-      label: "Encaissé",
-      value: stats ? formatDA(stats.revenue) : undefined,
+      label: t("a.overview.earned"),
+      value: stats ? money(stats.revenue) : undefined,
       Icon: Wallet,
       href: `${base}/orders`,
-      hint: "Commandes livrées",
+      hint: t("a.overview.earnedHint"),
     },
     {
-      label: "Produits",
+      label: t("a.overview.products"),
       value: stats ? `${stats.activeProducts}/${stats.totalProducts}` : undefined,
       Icon: Package,
       href: `${base}/products`,
-      hint: "Publiés / total",
+      hint: t("a.overview.productsHint"),
     },
     {
-      label: "Catégories",
+      label: t("a.overview.categories"),
       value: stats?.totalCategories,
       Icon: Tags,
       href: `${base}/categories`,
     },
     {
-      label: "Rupture",
+      label: t("a.overview.outOfStock"),
       value: stats?.outOfStock,
       Icon: AlertTriangle,
       href: `${base}/products`,
@@ -72,9 +74,9 @@ export default function OverviewPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Atelier"
-        title="Aperçu"
-        description="Tout ce qui se passe dans votre boutique, en un coup d'œil."
+        eyebrow={t("a.nav.atelier")}
+        title={t("a.nav.overview")}
+        description={t("a.overview.description")}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
@@ -108,12 +110,14 @@ export default function OverviewPage() {
 
       <section className="mt-10">
         <div className="mb-4 flex items-end justify-between">
-          <h2 className="font-display text-2xl text-ink">Dernières commandes</h2>
+          <h2 className="font-display text-2xl text-ink">
+            {t("a.overview.recent")}
+          </h2>
           <Link
             href={`${base}/orders`}
             className="text-[0.6rem] tracking-luxe-sm text-muted transition-colors hover:text-accent"
           >
-            Tout voir
+            {t("a.overview.seeAll")}
           </Link>
         </div>
 
@@ -125,8 +129,8 @@ export default function OverviewPage() {
           </div>
         ) : recent.length === 0 ? (
           <EmptyState
-            title="Aucune commande pour l'instant"
-            body="Dès qu'une cliente commande, elle apparaîtra ici."
+            title={t("a.overview.noOrders")}
+            body={t("a.overview.noOrdersBody")}
           />
         ) : (
           <div className="space-y-2">
@@ -145,13 +149,15 @@ export default function OverviewPage() {
                   </p>
                   <p className="mt-0.5 text-xs text-muted">
                     {formatPhone(order.phone)} · {order.wilayaName} ·{" "}
-                    {order.deliveryType === "home" ? "Domicile" : "Bureau"}
+                    {order.deliveryType === "home"
+                      ? t("a.overview.home")
+                      : t("a.overview.desk")}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <StatusPill status={order.status} />
                   <span className="text-sm font-medium text-ink">
-                    {formatDA(order.total)}
+                    {money(order.total)}
                   </span>
                 </div>
               </Link>
@@ -162,39 +168,63 @@ export default function OverviewPage() {
 
       {stats && stats.totalProducts === 0 && (
         <Card className="mt-8 border-gold/40">
-          <h3 className="font-display text-xl text-ink">Pour démarrer</h3>
+          <h3 className="font-display text-xl text-ink">
+            {t("a.overview.start")}
+          </h3>
+          {/* Each step is one sentence with a {link} slot, so translators can
+              put the link wherever the grammar needs it. */}
           <ol className="mt-4 space-y-2 text-sm text-muted">
-            <li>
-              1. Créez vos{" "}
-              <Link href={`${base}/categories`} className="text-accent">
-                catégories
-              </Link>{" "}
-              (Maquillage, Robes, Sacs…).
-            </li>
-            <li>
-              2. Ajoutez vos{" "}
-              <Link href={`${base}/products`} className="text-accent">
-                produits
-              </Link>{" "}
-              avec photos, tailles et couleurs.
-            </li>
-            <li>
-              3. Ajustez vos{" "}
-              <Link href={`${base}/delivery`} className="text-accent">
-                tarifs de livraison
-              </Link>{" "}
-              par wilaya.
-            </li>
-            <li>
-              4. Réglez le{" "}
-              <Link href={`${base}/theme`} className="text-accent">
-                thème
-              </Link>{" "}
-              à votre goût.
-            </li>
+            <StartStep
+              n={1}
+              sentence={t("a.overview.step1")}
+              href={`${base}/categories`}
+              linkText={t("a.nav.categories")}
+            />
+            <StartStep
+              n={2}
+              sentence={t("a.overview.step2")}
+              href={`${base}/products`}
+              linkText={t("a.nav.products")}
+            />
+            <StartStep
+              n={3}
+              sentence={t("a.overview.step3")}
+              href={`${base}/delivery`}
+              linkText={t("a.overview.step3Link")}
+            />
+            <StartStep
+              n={4}
+              sentence={t("a.overview.step4")}
+              href={`${base}/theme`}
+              linkText={t("a.nav.theme")}
+            />
           </ol>
         </Card>
       )}
     </>
+  );
+}
+
+/** Splits a translated sentence on its {link} slot and drops a Link in. */
+function StartStep({
+  n,
+  sentence,
+  href,
+  linkText,
+}: {
+  n: number;
+  sentence: string;
+  href: string;
+  linkText: string;
+}) {
+  const [before, after = ""] = sentence.split("{link}");
+  return (
+    <li>
+      {n}. {before}
+      <Link href={href} className="text-accent">
+        {linkText}
+      </Link>
+      {after}
+    </li>
   );
 }
